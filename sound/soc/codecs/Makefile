@@ -430,3 +430,4 @@ obj-y += msm_sdw/
 
 # SmartAmp
 obj-$(CONFIG_SND_SOC_TFA98XX)	+= tfa98xx/
+obj-$(CONFIG_SND_SOC_TFA9892)	+= tfa9892/

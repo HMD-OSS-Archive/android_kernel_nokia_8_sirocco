@@ -21,7 +21,6 @@
 #define MAX_STEP_CHG_ENTRIES	8
 #define STEP_CHG_VOTER		"STEP_CHG_VOTER"
 #define JEITA_VOTER		"JEITA_VOTER"
-/* 799 - Implement the WLC FCC adjust mechansim */
 #define FIH_WLC_VOTER "FIH_WLC_VOTER"
 /* end A1NO-799 */
 
@@ -44,7 +43,6 @@ struct step_chg_cfg {
 	struct range_data	fcc_cfg[MAX_STEP_CHG_ENTRIES];
 };
 
-/* 799 - Implement the WLC FCC adjust mechansim */
 struct wlc_fcc_cfg {
 	u32			psy_prop;
 	char			*prop_name;
@@ -70,7 +68,6 @@ struct jeita_fv_cfg {
 struct step_chg_info {
 	ktime_t			step_last_update_time;
 	ktime_t			jeita_last_update_time;
-	/* 799 - Implement the WLC FCC adjust mechansim */
 	ktime_t			wlc_last_update_time;
 	/* end A1NO-799 */
 	bool			step_chg_enable;
@@ -78,10 +75,8 @@ struct step_chg_info {
 	int			jeita_fcc_index;
 	int			jeita_fv_index;
 	int			step_index;
-	/* 1214 - Only use hysteresis when JEITA change from noraml to cool or warm */
 	int			last_jeita_status;
 	/* end NB1O-1214 */
-	/* 799 - Implement the WLC FCC adjust mechansim */
 	int			wlc_fcc_index;
 	bool 		fih_wlc_fcc_en;
 	/* end A1NO-799 */
@@ -90,7 +85,6 @@ struct step_chg_info {
 	struct votable		*fv_votable;
 	struct wakeup_source	*step_chg_ws;
 	struct power_supply	*batt_psy;
-	/* 799 - Implement the WLC FCC adjust mechansim */
 	struct power_supply	*dc_psy;
 	/* end A1NO-799 */
 	struct delayed_work	status_change_work;
@@ -136,7 +130,6 @@ static struct step_chg_cfg step_chg_config = {
 	},
 };
 
-/* 799 - Implement the WLC FCC adjust mechansim */
 /*
  * Because wireless charging generate more power dissipation, the battery
  * temperature would be raise quickly. We need to use another charging
@@ -207,7 +200,6 @@ static bool is_batt_available(struct step_chg_info *chip)
 	return true;
 }
 
-/* 799 - Implement the WLC FCC adjust mechansim */
 static bool is_dc_available(struct step_chg_info *chip)
 {
 	if (!chip->dc_psy)
@@ -223,7 +215,6 @@ static bool is_dc_available(struct step_chg_info *chip)
 static int get_val(struct range_data *range, int hysteresis, int current_index,
 		int threshold,
 		int *new_index, int *val,
-		/* 1214 - Only use hysteresis when JEITA change from noraml to cool or warm */
 		int last_jeita_status, int current_jeita_status)
 		/* end NB1O-1214 */
 {
@@ -236,7 +227,6 @@ static int get_val(struct range_data *range, int hysteresis, int current_index,
 			range[i].high_threshold, threshold)) {
 			*new_index = i;
 			*val = range[i].value;
-			/* 1663 - If the threshold = 0, the undefined configuration will hit. We need to break the loop once got the confgiuration */
 			break;
 			/* end NB1O-1663 */
 		}
@@ -275,7 +265,7 @@ static int get_val(struct range_data *range, int hysteresis, int current_index,
 			*val = range[current_index].value;
 		}
 	} else if (*new_index == current_index - 1) {
-		if (threshold > range[*new_index].high_threshold - hysteresis + 1 ) { /* WayneWCShiue - we need to add 1 to avoid 1degC delay from JEITA WARM to GOOD*/
+		if (threshold > range[*new_index].high_threshold - hysteresis + 1 ) { 
 			/*
 			 * stay in the current index, threshold is not lower
 			 * by hysteresis amount
@@ -318,7 +308,6 @@ static int handle_step_chg_config(struct step_chg_info *chip)
 		return rc;
 	}
 
-	/* 1214 - Only use hysteresis when JEITA change from noraml to cool or warm */
 	rc = get_val(step_chg_config.fcc_cfg, step_chg_config.hysteresis,
 			chip->step_index,
 			pval.intval,
@@ -357,7 +346,6 @@ reschedule:
 static int handle_jeita(struct step_chg_info *chip)
 {
 	union power_supply_propval pval = {0, };
-	/* 1214 - Only use hysteresis when JEITA change from noraml to cool or warm */
 	union power_supply_propval jeita_pval = {0, };
 	/* end NB1O-1214 */
 
@@ -391,7 +379,6 @@ static int handle_jeita(struct step_chg_info *chip)
 		return rc;
 	}
 
-	/* 1214 - Only use hysteresis when JEITA change from noraml to cool or warm */
 	rc = power_supply_get_property(chip->batt_psy,
 				POWER_SUPPLY_PROP_HEALTH, &jeita_pval);
 
@@ -425,7 +412,6 @@ static int handle_jeita(struct step_chg_info *chip)
 
 	vote(chip->fcc_votable, JEITA_VOTER, true, fcc_ua);
 
-	/* 1214 - Only use hysteresis when JEITA change from noraml to cool or warm */
 	rc = power_supply_get_property(chip->batt_psy,
 				POWER_SUPPLY_PROP_HEALTH, &jeita_pval);
 
@@ -457,7 +443,6 @@ static int handle_jeita(struct step_chg_info *chip)
 		step_chg_config.prop_name, pval.intval, fcc_ua, fv_uv);
 
 update_time:
-	/* 1214 - Only use hysteresis when JEITA change from noraml to cool or warm */
 	chip->last_jeita_status = jeita_pval.intval;
 	/* end NB1O-1214 */
 	chip->jeita_last_update_time = ktime_get();
@@ -468,11 +453,9 @@ reschedule:
 	return (STEP_CHG_HYSTERISIS_DELAY_US - elapsed_us + 1000);
 }
 
-/* 799 - Implement the WLC FCC adjust mechansim */
 static int handle_WLC(struct step_chg_info *chip)
 {
 	union power_supply_propval pval = {0, };
-	/* 1214 - Only use hysteresis when JEITA change from noraml to cool or warm */
 	union power_supply_propval jeita_pval = {0, };
 	/* end NB1O-1214 */
 
@@ -520,7 +503,6 @@ static int handle_WLC(struct step_chg_info *chip)
 		return rc;
 	}
 
-	/* 1214 - Only use hysteresis when JEITA change from noraml to cool or warm */
 	rc = power_supply_get_property(chip->batt_psy,
 				POWER_SUPPLY_PROP_HEALTH, &jeita_pval);
 
@@ -558,7 +540,6 @@ static int handle_WLC(struct step_chg_info *chip)
 		wlc_fcc_config.prop_name, pval.intval, fcc_ua);
 
 update_time:
-	/* 1214 - Only use hysteresis when JEITA change from noraml to cool or warm */
 	chip->last_jeita_status = jeita_pval.intval;
 	/* end NB1O-1214 */
 	chip->wlc_last_update_time = ktime_get();
@@ -578,14 +559,23 @@ static void status_change_work(struct work_struct *work)
 	int reschedule_us;
 	int reschedule_jeita_work_us = 0;
 	int reschedule_step_work_us = 0;
-	/* 799 - Implement the WLC FCC adjust mechansim */
+	union power_supply_propval pval = {0, };
+
+	if (!is_batt_available(chip)) {
+		__pm_relax(chip->step_chg_ws);
+		return;
+	}
 	int reschedule_wlc_work_us = 0;
 	/* end A1NO-799 */
 
-	if (!is_batt_available(chip))
+	/* skip jeita and step if not charging */
+	rc = power_supply_get_property(chip->batt_psy,
+		POWER_SUPPLY_PROP_STATUS, &pval);
+	if (pval.intval != POWER_SUPPLY_STATUS_CHARGING) {
+		__pm_relax(chip->step_chg_ws);
 		return;
+	}
 
-	/* skip elapsed_us debounce for handling battery temperature */
 	rc = handle_jeita(chip);
 	if (rc > 0)
 		reschedule_jeita_work_us = rc;
@@ -598,7 +588,6 @@ static void status_change_work(struct work_struct *work)
 	if (rc < 0)
 		pr_err("Couldn't handle step rc = %d\n", rc);
 
-	/* 799 - Implement the WLC FCC adjust mechansim */
 	rc = handle_WLC(chip);
 	if (rc > 0)
 		reschedule_wlc_work_us = rc;
@@ -607,7 +596,6 @@ static void status_change_work(struct work_struct *work)
 	/* end A1NO-799 */
 
 	reschedule_us = min(reschedule_jeita_work_us, reschedule_step_work_us);
-	/* 799 - Implement the WLC FCC adjust mechansim */
 	reschedule_us = min(reschedule_us, reschedule_wlc_work_us);
 	/* end A1NO-799 */
 
@@ -649,7 +637,6 @@ static int step_chg_register_notifier(struct step_chg_info *chip)
 	return 0;
 }
 
-/* 799 - Implement the WLC FCC adjust mechansim */
 int qcom_step_chg_init(bool step_chg_enable, bool sw_jeita_enable, bool fih_wlc_fcc_enable)
 /* end A1NO-799 */
 {
@@ -673,7 +660,6 @@ int qcom_step_chg_init(bool step_chg_enable, bool sw_jeita_enable, bool fih_wlc_
 
 	chip->step_chg_enable = step_chg_enable;
 	chip->sw_jeita_enable = sw_jeita_enable;
-	/* 799 - Implement the WLC FCC adjust mechansim */
 	chip->fih_wlc_fcc_en = fih_wlc_fcc_enable;
 	/* end A1NO-799 */
 
@@ -705,7 +691,6 @@ int qcom_step_chg_init(bool step_chg_enable, bool sw_jeita_enable, bool fih_wlc_
 		goto release_wakeup_source;
 	}
 
-	/* 799 - Implement the WLC FCC adjust mechansim */
 	if (fih_wlc_fcc_enable && (!wlc_fcc_config.psy_prop ||
 				!wlc_fcc_config.prop_name)) {
 		/* fail if step-chg configuration is invalid */

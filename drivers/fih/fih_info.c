@@ -81,6 +81,8 @@ static int fih_info_proc_open_rf_band_show(struct seq_file *m, void *v)
 			strcpy(msg, "G_850_900_1800_1900^W_1_2_5_8^L_1_2_3_4_5_7_8_12_13_17_20_28_38_40_41_66"); break;
 		case FIH_BAND_G_850_900_1800_1900_W_1_2_4_5_8_L_1_2_3_4_5_7_8_12_13_17_20_28_38_40_41_SS:
 			strcpy(msg, "G_850_900_1800_1900^W_1_2_4_5_8^L_1_2_3_4_5_7_8_12_13_17_20_28_38_40_41"); break;
+		case FIH_BAND_G_850_900_1800_1900_W_1_2_5_8_T_34_39_L_1_3_5_7_8_28_34_38_39_40_41: /* F11 */
+			strcpy(msg, "G_850_900_1800_1900^W_1_2_5_8^T_34_39^L_1_3_5_7_8_28_34_38_39_40_41"); break;
 		/* NO BAND */
 		case FIH_RF_NONE: strcpy(msg, "NONE"); break;
 		default: strcpy(msg, "UNKNOWN\n"); break;
@@ -156,6 +158,7 @@ static int fih_info_proc_open_simslot_show(struct seq_file *m, void *v)
 		case FIH_BAND_G_850_900_1800_1900_W_1_2_5_8_C_0_T_34_39_L_1_2_3_4_5_7_8_20_28_34_38_39_40_41_SS: slot = 1; break;
 		case FIH_BAND_G_850_900_1800_1900_W_1_2_5_8_L_1_2_3_4_5_7_8_12_13_17_20_28_38_40_41_66_SS: slot = 1; break;
 		case FIH_BAND_G_850_900_1800_1900_W_1_2_4_5_8_L_1_2_3_4_5_7_8_12_13_17_20_28_38_40_41_SS: slot = 1; break;
+		case FIH_BAND_G_850_900_1800_1900_W_1_2_5_8_T_34_39_L_1_3_5_7_8_28_34_38_39_40_41: slot = 2; break; /* F11 */
 		default: slot = 0; break;
 	}
 	seq_printf(m, "%d\n", slot);

@@ -19,7 +19,7 @@
 	};
 
 	reserved-memory {
-		fih_mem: fih_region@a0000000 { 
+		fih_mem: fih_region@a0000000 { /* for FIH feature */
 			compatible = "removed-dma-pool";
 			no-map;
 			reg = <0 0xa0000000 0 0xb00000>;

@@ -422,22 +422,6 @@ static int mdss_dp_clk_init(struct mdss_dp_drv_pdata *dp_drv,
 				__func__);
 			dp_drv->pixel_parent = NULL;
 		}
-
-		dp_drv->pixel_clk_two_div = devm_clk_get(dev,
-			"pixel_clk_two_div");
-		if (IS_ERR(dp_drv->pixel_clk_two_div)) {
-			pr_debug("%s: Unable to get DP pixel two div clk\n",
-				__func__);
-			dp_drv->pixel_clk_two_div = NULL;
-		}
-
-		dp_drv->pixel_clk_four_div = devm_clk_get(dev,
-			"pixel_clk_four_div");
-		if (IS_ERR(dp_drv->pixel_clk_four_div)) {
-			pr_debug("%s: Unable to get DP pixel four div clk\n",
-				__func__);
-			dp_drv->pixel_clk_four_div = NULL;
-		}
 	} else {
 		if (dp_drv->pixel_parent)
 			devm_clk_put(dev, dp_drv->pixel_parent);
@@ -1432,16 +1416,6 @@ static int mdss_dp_enable_mainlink_clocks(struct mdss_dp_drv_pdata *dp)
 	if (dp->link_clks_on) {
 		pr_debug("link clocks already on\n");
 		return ret;
-	}
-
-	if (dp->pixel_parent && dp->pixel_clk_two_div &&
-		dp->pixel_clk_four_div) {
-		if (dp->link_rate == DP_LINK_RATE_540)
-			clk_set_parent(dp->pixel_parent,
-				dp->pixel_clk_four_div);
-		else
-			clk_set_parent(dp->pixel_parent,
-				dp->pixel_clk_two_div);
 	}
 
 	mdss_dp_set_clock_rate(dp, "ctrl_link_clk",
@@ -3056,7 +3030,6 @@ static void mdss_dp_mainlink_push_idle(struct mdss_panel_data *pdata)
 		if (mdss_dp_aux_send_psm_request(dp_drv, true))
 			pr_err("Failed to enter low power mode\n");
 	}
-
 	reinit_completion(&dp_drv->idle_comp);
 	mdss_dp_state_ctrl(&dp_drv->ctrl_io, ST_PUSH_IDLE);
 	if (!wait_for_completion_timeout(&dp_drv->idle_comp,

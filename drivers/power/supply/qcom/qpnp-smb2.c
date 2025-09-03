@@ -123,7 +123,6 @@ static struct smb_params v1_params = {
 		.max_u	= 1575000,
 		.step_u	= 25000,
 	},
-	/* 468 - [BAT] Jeita temperature protection */
 	.jeita_fv_comp		= {
 		.name	= "jeita fv reduction",
 		.reg	= JEITA_FVCOMP_CFG_REG,
@@ -172,7 +171,6 @@ struct smb_dt_props {
 	int	wipower_max_uw;
 	int	min_freq_khz;
 	int	max_freq_khz;
-	/* 468 - [BAT] Jeita temperature protection */
 	int	jeita_fcc_comp;
 	int	jeita_fv_comp;
 	/* end NB1-468 */
@@ -201,6 +199,11 @@ static int __weak_chg_icl_ua = 500000;
 module_param_named(
 	weak_chg_icl_ua, __weak_chg_icl_ua, int, S_IRUSR | S_IWUSR);
 
+static int __try_sink_enabled = 1;
+module_param_named(
+	try_sink_enabled, __try_sink_enabled, int, 0600
+);
+
 #define MICRO_1P5A		1500000
 #define MICRO_P1A		100000
 #define OTG_DEFAULT_DEGLITCH_TIME_MS	50
@@ -209,7 +212,6 @@ module_param_named(
 #define BITE_WDOG_TIMEOUT_8S		0x3
 #define BARK_WDOG_TIMEOUT_MASK		GENMASK(3, 2)
 #define BARK_WDOG_TIMEOUT_SHIFT		2
-/* 506 - Create a node to on/off otg */
 #if defined(CONFIG_FIH_NB1) || defined(CONFIG_FIH_A1N)
 static struct smb2 *mChip = NULL;
 char fih_otg_disable_mode = 0; // FIHTDC, IdaChiang, add for OTG FREQ
@@ -278,9 +280,8 @@ end:
 
 static DEVICE_ATTR(fih_otg_fun, 0644, fih_otg_show, fih_otg_store);
 #endif
-/* 506 */
+/* end FIH - NB1-506 */
 
-/* 6414 - Add battery event for problem report */
 static bool charging_current_too_low(struct smb_charger * chg, int cmp_current_ma)
 {
 	union power_supply_propval pval = {0, };
@@ -459,7 +460,8 @@ static int smb2_parse_dt(struct smb2 *chip)
 	if (rc < 0)
 		chg->otg_delay_ms = OTG_DEFAULT_DEGLITCH_TIME_MS;
 
-	/* 468 - [BAT] Jeita temperature protection */
+	chg->fcc_stepper_mode = of_property_read_bool(node,
+					"qcom,fcc-stepping-enable");
 	rc = of_property_read_u32(node, "qcom,jeita-fcc-comp",
 			&chip->dt.jeita_fcc_comp);
 	if (rc < 0) {
@@ -475,18 +477,15 @@ static int smb2_parse_dt(struct smb2 *chip)
 	}
 	/* end NB1-468 */
 
-	/* 799 - Implement the WLC FCC adjust mechansim */
 	chg->fih_wlc_fcc_en = of_property_read_bool(node, "fih,wlc-fcc-en");
 	/* end A1NO-799 */
 
-	/* 1665 - Add FIH abnormal charging current check mechanism */
 	chg->fih_chg_abnormal_check_en = of_property_read_bool(node, "fih,chg-abnormal-check-en");
 	if(chg->fih_chg_abnormal_check_en == true) {
 		chg->fih_reEnable_max_limit = 0;
 	}
 	/* end NB1O-1665 */
 
-	/* 3293 - Show battery info */
 	chg->show_batt_info_en = of_property_read_bool(node, "fih,show-batt-info-en");
 	/* end NB1-3293 */
 
@@ -574,11 +573,10 @@ static int smb2_usb_get_prop(struct power_supply *psy,
 			val->intval = chg->real_charger_type;
 		break;
 	case POWER_SUPPLY_PROP_TYPEC_MODE:
-/* 680 - Dump typec sts register value */
 #if defined(CONFIG_FIH_NB1) || defined(CONFIG_FIH_A1N)
 		smblib_dump_typec_sts(chg, val);
 #endif
-/* 680 */
+/* end FIH - NB1-680 */
 		if (chg->micro_usb_mode)
 			val->intval = POWER_SUPPLY_TYPEC_NONE;
 		else if (chip->bad_part)
@@ -971,6 +969,7 @@ static int smb2_init_usb_main_psy(struct smb2 *chip)
  *************************/
 
 static enum power_supply_property smb2_dc_props[] = {
+	POWER_SUPPLY_PROP_INPUT_SUSPEND,
 	POWER_SUPPLY_PROP_PRESENT,
 	POWER_SUPPLY_PROP_ONLINE,
 	POWER_SUPPLY_PROP_CURRENT_MAX,
@@ -986,6 +985,9 @@ static int smb2_dc_get_prop(struct power_supply *psy,
 	int rc = 0;
 
 	switch (psp) {
+	case POWER_SUPPLY_PROP_INPUT_SUSPEND:
+		val->intval = get_effective_result(chg->dc_suspend_votable);
+		break;
 	case POWER_SUPPLY_PROP_PRESENT:
 		rc = smblib_get_prop_dc_present(chg, val);
 		break;
@@ -1017,6 +1019,10 @@ static int smb2_dc_set_prop(struct power_supply *psy,
 	int rc = 0;
 
 	switch (psp) {
+	case POWER_SUPPLY_PROP_INPUT_SUSPEND:
+		rc = vote(chg->dc_suspend_votable, WBC_VOTER,
+				(bool)val->intval, 0);
+		break;
 	case POWER_SUPPLY_PROP_CURRENT_MAX:
 		rc = smblib_set_prop_dc_current_max(chg, val);
 		break;
@@ -1104,16 +1110,15 @@ static enum power_supply_property smb2_batt_props[] = {
 	POWER_SUPPLY_PROP_RERUN_AICL,
 	POWER_SUPPLY_PROP_DP_DM,
 	POWER_SUPPLY_PROP_CHARGE_COUNTER,
-	/* 799 - Implement the WLC FCC adjust mechansim */
+	POWER_SUPPLY_PROP_FCC_STEPPER_ENABLE,
+	POWER_SUPPLY_PROP_CHARGE_FULL,
+	POWER_SUPPLY_PROP_CYCLE_COUNT,
 	POWER_SUPPLY_PROP_FIH_WLC_FCC_EN,
 	/* end A1NO-799 */
-	/* 8555 - [BAT] Inform Battery Protect AP once the battery can only charge to 4.1V */
 	POWER_SUPPLY_PROP_JEITA_FULL_CAPACITY_STATUS,
 	/* end NB1-8555 */
-	/* 62 - [FTM] Supprt FTM command */
 	POWER_SUPPLY_PROP_INPUT_CURRENT_MAX,
 	/* end NB1-62 */
-	/* 6414 - Add battery event for problem report */
 	POWER_SUPPLY_PROP_MONITOR_EVENT,
 	/* end NB1-6414 */
 };
@@ -1170,9 +1175,6 @@ static int smb2_batt_get_prop(struct power_supply *psy,
 	case POWER_SUPPLY_PROP_SW_JEITA_ENABLED:
 		val->intval = chg->sw_jeita_enabled;
 		break;
-	case POWER_SUPPLY_PROP_VOLTAGE_NOW:
-		rc = smblib_get_prop_batt_voltage_now(chg, val);
-		break;
 	case POWER_SUPPLY_PROP_VOLTAGE_MAX:
 		val->intval = get_client_vote(chg->fv_votable,
 				BATT_PROFILE_VOTER);
@@ -1184,9 +1186,6 @@ static int smb2_batt_get_prop(struct power_supply *psy,
 		val->intval = get_client_vote_locked(chg->fv_votable,
 				QNOVO_VOTER);
 		break;
-	case POWER_SUPPLY_PROP_CURRENT_NOW:
-		rc = smblib_get_prop_batt_current_now(chg, val);
-		break;
 	case POWER_SUPPLY_PROP_CURRENT_QNOVO:
 		val->intval = get_client_vote_locked(chg->fcc_votable,
 				QNOVO_VOTER);
@@ -1194,9 +1193,6 @@ static int smb2_batt_get_prop(struct power_supply *psy,
 	case POWER_SUPPLY_PROP_CONSTANT_CHARGE_CURRENT_MAX:
 		val->intval = get_client_vote(chg->fcc_votable,
 					      BATT_PROFILE_VOTER);
-		break;
-	case POWER_SUPPLY_PROP_TEMP:
-		rc = smblib_get_prop_batt_temp(chg, val);
 		break;
 	case POWER_SUPPLY_PROP_TECHNOLOGY:
 		val->intval = POWER_SUPPLY_TECHNOLOGY_LION;
@@ -1222,24 +1218,28 @@ static int smb2_batt_get_prop(struct power_supply *psy,
 		val->intval = 0;
 		break;
 	case POWER_SUPPLY_PROP_CHARGE_COUNTER:
-		rc = smblib_get_prop_batt_charge_counter(chg, val);
+	case POWER_SUPPLY_PROP_CHARGE_FULL:
+	case POWER_SUPPLY_PROP_CYCLE_COUNT:
+	case POWER_SUPPLY_PROP_VOLTAGE_NOW:
+	case POWER_SUPPLY_PROP_CURRENT_NOW:
+	case POWER_SUPPLY_PROP_TEMP:
+		rc = smblib_get_prop_from_bms(chg, psp, val);
 		break;
-	/* 799 - Implement the WLC FCC adjust mechansim */
+	case POWER_SUPPLY_PROP_FCC_STEPPER_ENABLE:
+		val->intval = chg->fcc_stepper_mode;
+		break;
 	case POWER_SUPPLY_PROP_FIH_WLC_FCC_EN:
 		val->intval = chg->fih_wlc_fcc_en;
 		break;
 	/* end A1NO-799 */
-	/* 8555 - [BAT] Inform Battery Protect AP once the battery can only charge to 4.1V */
 	case POWER_SUPPLY_PROP_JEITA_FULL_CAPACITY_STATUS:
 		val->intval = FIH_check_chg_status(chg);
 		break;
 	/* end NB1-8555 */
-	/* 62 - [FTM] Supprt FTM command */
 	case POWER_SUPPLY_PROP_INPUT_CURRENT_MAX:
 		val->intval = get_effective_result(chg->usb_icl_votable);
 		break;
 	/* end NB1-62 */
-	/* 6414 - Add battery event for problem report */
 	case POWER_SUPPLY_PROP_MONITOR_EVENT:
 		val->intval = collect_monitor_event(chg);
 		break;
@@ -1262,13 +1262,11 @@ static int smb2_batt_set_prop(struct power_supply *psy,
 		const union power_supply_propval *val)
 {
 	int rc = 0;
-	/* 5978 - open a back door to modify register */
 	u8 value = 0;
 	u8 mask = 0;
 	u16 address = 0;
 	/* end NB1-5978 */
 	struct smb_charger *chg = power_supply_get_drvdata(psy);
-	/* 3730 - Change JEITA dynamically */
 	struct smb2 *chip = power_supply_get_drvdata(psy);
 	/* end NB1-3730 */
 
@@ -1281,7 +1279,6 @@ static int smb2_batt_set_prop(struct power_supply *psy,
 		rc = smblib_set_prop_system_temp_level(chg, val);
 		break;
 	case POWER_SUPPLY_PROP_CAPACITY:
-		/* 4573 - Open a back door to disable safety timer */
 		if(val->intval == 95277259) {
 			pr_err("Force to disable safety timer for QA testing\n");
 			smblib_masked_write(chg, 0x10A0, GENMASK(1, 0), 0);
@@ -1289,7 +1286,6 @@ static int smb2_batt_set_prop(struct power_supply *psy,
 		}
 		/* end NB1-4573 */
 
-		/* 5978 - open a back door to modify register */
 		if(val->intval > 100 && val->intval != 95277259) {
 			address = (val->intval >> 16) & 0x0000FFFF;
 			value = ((val->intval & 0x0000FF00) >> 8);
@@ -1359,7 +1355,6 @@ static int smb2_batt_set_prop(struct power_supply *psy,
 	case POWER_SUPPLY_PROP_INPUT_CURRENT_LIMITED:
 		rc = smblib_set_prop_input_current_limited(chg, val);
 		break;
-	/* 3730 - Change JEITA dynamically */
 	case POWER_SUPPLY_PROP_JEITA_DIFF_FN_EN:
 		chg->diff_jeita_fn_en = (val->intval == 1) ? true : false;
 		pr_err("Wayne: chg->diff_jeita_fn_en = %d\n", val->intval);
@@ -1394,7 +1389,6 @@ static int smb2_batt_set_prop(struct power_supply *psy,
 		pr_debug("chg->jeita_fv_comp_warm = %d\n", chg->jeita_fv_comp_warm);
 		break;
 	/* end NB1-3730 */
-	/* 8555 - [BAT] Inform Battery Protect AP once the battery can only charge to 4.1V */
 	case POWER_SUPPLY_PROP_JEITA_FULL_CAPACITY_WARM_EN:
 		if(val->intval == 1)
 			chg->fih_jeita_full_capacity_warm_en = true;
@@ -1410,14 +1404,12 @@ static int smb2_batt_set_prop(struct power_supply *psy,
 		pr_debug("fih_jeita_full_capacity_cool_en = %s\n", val->intval == 1 ? "true" : "false");
 		break;
 	/* end NB1-8555 */
-	/* 1713 - Add periodical checker mechanism for charging */
 	case POWER_SUPPLY_PROP_FIH_PERIOD_CHECKER:
 		FIH_adjust_JEITA(chg);
 		FIH_soft_JEITA_recharge_check(chg);
 		FIH_chg_abnormal_check(chg);
 	break;
 	/* end A1N-1713 */
-	/* 62 - [FTM] Supprt FTM command */
 	case POWER_SUPPLY_PROP_INPUT_CURRENT_MAX:
 		/* Use icl function to instead of vote mechanism, because the new icl vote_callback cannot allow to set the icl which is smaller than aicl_result */
 		smblib_set_icl_current(chg, val->intval);
@@ -1446,7 +1438,6 @@ static int smb2_batt_prop_is_writeable(struct power_supply *psy,
 	case POWER_SUPPLY_PROP_INPUT_CURRENT_LIMITED:
 	case POWER_SUPPLY_PROP_STEP_CHARGING_ENABLED:
 	case POWER_SUPPLY_PROP_SW_JEITA_ENABLED:
-	/* 62 - [FTM] Supprt FTM command */
 	case POWER_SUPPLY_PROP_CONSTANT_CHARGE_CURRENT_MAX:
 	case POWER_SUPPLY_PROP_INPUT_CURRENT_MAX:
 	/* end NB1-62 */
@@ -1491,7 +1482,7 @@ static int smb2_init_batt_psy(struct smb2 *chip)
  * VBUS REGULATOR REGISTRATION *
  ******************************/
 
-struct regulator_ops smb2_vbus_reg_ops = {
+static struct regulator_ops smb2_vbus_reg_ops = {
 	.enable = smblib_vbus_regulator_enable,
 	.disable = smblib_vbus_regulator_disable,
 	.is_enabled = smblib_vbus_regulator_is_enabled,
@@ -1533,7 +1524,7 @@ static int smb2_init_vbus_regulator(struct smb2 *chip)
  * VCONN REGULATOR REGISTRATION *
  ******************************/
 
-struct regulator_ops smb2_vconn_reg_ops = {
+static struct regulator_ops smb2_vconn_reg_ops = {
 	.enable = smblib_vconn_regulator_enable,
 	.disable = smblib_vconn_regulator_disable,
 	.is_enabled = smblib_vconn_regulator_is_enabled,
@@ -1801,7 +1792,6 @@ static int smb2_init_hw(struct smb2 *chip)
 		return rc;
 	}
 
-	/* 468 - [BAT] Jeita temperature protection */
 	if (chip->dt.jeita_fcc_comp < 0)
 		smblib_get_charge_param(chg, &chg->param.jeita_cc_comp,
 					&chip->dt.jeita_fcc_comp);
@@ -1861,7 +1851,6 @@ static int smb2_init_hw(struct smb2 *chip)
 	 * start from min and AICL ADC disable
 	 */
 	rc = smblib_masked_write(chg, USBIN_AICL_OPTIONS_CFG_REG,
-	/* 3086 - Enable AICL re-run */
 			USBIN_AICL_START_AT_MAX_BIT | USBIN_AICL_RERUN_EN_BIT
 				| USBIN_AICL_ADC_EN_BIT, USBIN_AICL_RERUN_EN_BIT);
 	/* end NB1O-3086 */
@@ -1870,7 +1859,6 @@ static int smb2_init_hw(struct smb2 *chip)
 		return rc;
 	}
 
-	/* 3086 - Enable AICL re-run */
 	rc = smblib_masked_write(chg, AICL_RERUN_TIME_CFG_REG,
 			AICL_RERUN_TIME_MASK,  0x1);
 	if (rc < 0) {
@@ -1972,6 +1960,18 @@ static int smb2_init_hw(struct smb2 *chip)
 		return rc;
 	}
 
+	/*
+	 * allow DRP.DFP time to exceed by tPDdebounce time.
+	 */
+	rc = smblib_masked_write(chg, TAPER_TIMER_SEL_CFG_REG,
+				TYPEC_DRP_DFP_TIME_CFG_BIT,
+				TYPEC_DRP_DFP_TIME_CFG_BIT);
+	if (rc < 0) {
+		dev_err(chg->dev, "Couldn't configure DRP.DFP time rc=%d\n",
+			rc);
+		return rc;
+	}
+
 	/* configure float charger options */
 	switch (chip->dt.float_option) {
 	case 1:
@@ -2001,7 +2001,6 @@ static int smb2_init_hw(struct smb2 *chip)
 #endif
 //@_TEST :
 
-	/* 468 - [BAT] Jeita temperature protection */
 	rc = smblib_set_charge_param(chg, &chg->param.jeita_cc_comp, chip->dt.jeita_fcc_comp);
 	if (rc < 0) {
 		pr_err("Wayne: Couldn't configure jeita fcc comp rc = %d\n", rc);
@@ -2146,7 +2145,8 @@ static int smb2_chg_config_init(struct smb2 *chip)
 	switch (pmic_rev_id->pmic_subtype) {
 	case PMI8998_SUBTYPE:
 		chip->chg.smb_version = PMI8998_SUBTYPE;
-		chip->chg.wa_flags |= BOOST_BACK_WA | QC_AUTH_INTERRUPT_WA_BIT;
+		chip->chg.wa_flags |= BOOST_BACK_WA | QC_AUTH_INTERRUPT_WA_BIT
+				| TYPEC_PBS_WA_BIT;
 		if (pmic_rev_id->rev4 == PMI8998_V1P1_REV4) /* PMI rev 1.1 */
 			chg->wa_flags |= QC_CHARGER_DETECTION_WA_BIT;
 		if (pmic_rev_id->rev4 == PMI8998_V2P0_REV4) /* PMI rev 2.0 */
@@ -2161,7 +2161,8 @@ static int smb2_chg_config_init(struct smb2 *chip)
 		break;
 	case PM660_SUBTYPE:
 		chip->chg.smb_version = PM660_SUBTYPE;
-		chip->chg.wa_flags |= BOOST_BACK_WA | OTG_WA;
+		chip->chg.wa_flags |= BOOST_BACK_WA | OTG_WA | OV_IRQ_WA_BIT
+				| TYPEC_PBS_WA_BIT;
 		chg->param.freq_buck = pm660_params.freq_buck;
 		chg->param.freq_boost = pm660_params.freq_boost;
 		chg->chg_freq.freq_5V		= 650;
@@ -2251,7 +2252,6 @@ static struct smb_irq_info smb2_irqs[] = {
 	[BATT_TEMP_IRQ] = {
 		.name		= "bat-temp",
 		.handler	= smblib_handle_batt_temp_changed,
-		/* 7789 - bat-temp need to wakeup system, and change JEITA setting */
 		.wake		= true,
 		/* end NB1-7789 */
 	},
@@ -2575,6 +2575,7 @@ static int smb2_probe(struct platform_device *pdev)
 	chg->dev = &pdev->dev;
 	chg->param = v1_params;
 	chg->debug_mask = &__debug_mask;
+	chg->try_sink_enabled = &__try_sink_enabled;
 	chg->weak_chg_icl_ua = &__weak_chg_icl_ua;
 	chg->mode = PARALLEL_MASTER;
 	chg->irq_info = smb2_irqs;
@@ -2729,7 +2730,6 @@ static int smb2_probe(struct platform_device *pdev)
 	pr_info("QPNP SMB2 probed successfully usb:present=%d type=%d batt:present = %d health = %d charge = %d\n",
 		usb_present, chg->real_charger_type,
 		batt_present, batt_health, batt_charge_type);
-	/* 61 - [BAT] Workaround for DUT cannot be charged with pmi8998 v2 */
 	#ifdef CONFIG_FIH_NB1
 	rc = smblib_masked_write(chg, THERMREG_SRC_CFG_REG,
 	THERMREG_SKIN_ADC_SRC_EN_BIT,
@@ -2763,12 +2763,11 @@ static int smb2_probe(struct platform_device *pdev)
 #endif
 /* end FIH */
 
-/* 506 - Create a node to on/off otg */
 #if defined(CONFIG_FIH_NB1) || defined(CONFIG_FIH_A1N)
 	device_create_file(&pdev->dev, &dev_attr_fih_otg_fun); // FIHTDC, IdaChiang, add for FREQ
 	mChip = chip;
 #endif
-/* 506 */
+/* end FIH - NB1-506 */
 
 	pr_info("QPNP SMB2 probed successfully\n");
 	return rc;

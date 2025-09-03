@@ -64,6 +64,11 @@
 		qcom,mdss-dsi-aod-resume-command-state = "dsi_hs_mode";
 		qcom,mdss-dsi-aod-suspend-command-state = "dsi_hs_mode";
 		qcom,mdss-dsi-panel-orientation="180";
+		fih,color_managerial;
+
+		//Enable ESD checking
+		qcom,esd-check-enabled;
+		qcom,mdss-dsi-panel-status-check-mode = "te_signal_check";
 
 		qcom,mdss-dsi-aod-suspend-command = [
 			39 01 00 00 00 00 03 7F 5A 5A

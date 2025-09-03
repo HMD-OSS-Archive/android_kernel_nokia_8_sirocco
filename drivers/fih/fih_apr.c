@@ -148,6 +148,8 @@ static int fih_apr_property(struct platform_device *pdev)
 	return rc;
 }
 
+extern void qpnp_pon_dump_reason(void);
+
 static void dump_poweron_cause(unsigned long data)
 {
 	unsigned long pn = simple_strtoul(pon,  NULL, 0);
@@ -161,6 +163,8 @@ static void dump_poweron_cause(unsigned long data)
 	pr_info("%s: poff=0x%08lx\n", __func__, pf);
 	pr_info("%s: rere=0x%08lx\n", __func__, re);
 	pr_info("%s: ramp=0x%08lx\n", __func__, rp);
+
+	qpnp_pon_dump_reason();
 
 	del_timer(&dump_poweron_cause_timer);
 }

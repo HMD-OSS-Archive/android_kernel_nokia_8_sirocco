@@ -181,9 +181,15 @@
 #define FIH_SENSOR_SSC_MEM_ADDR			FIH_SENSOR_SSC_BASE
 #define FIH_SENSOR_SSC_MEM_SIZE			FIH_SENSOR_SSC_SIZE
 
+/* sensordata 2*/
+#define FIH_SENSORDATA2_BASE				(FIH_SENSOR_SSC_BASE + FIH_SENSOR_SSC_SIZE)
+#define FIH_SENSORDATA2_SIZE				0x00006400
+#define FIH_SENSORDATA2_MEM_ADDR			FIH_SENSORDATA2_BASE
+#define FIH_SENSORDATA2_MEM_SIZE			FIH_SENSORDATA2_SIZE
+
 /* no use 6 */
-#define FIH_NO_USE_6_BASE				(FIH_SENSOR_SSC_BASE + FIH_SENSOR_SSC_SIZE)
-#define FIH_NO_USE_6_SIZE				0x00026000
+#define FIH_NO_USE_6_BASE				(FIH_SENSORDATA2_BASE + FIH_SENSORDATA2_SIZE)
+#define FIH_NO_USE_6_SIZE				0x0001FC00
 
  /* -------------------------------------------------------- 9MB */
 
@@ -215,14 +221,14 @@
  *   0xA0A8_0040 | 0x0000_0040 | secboot:devinfo (64B)
  *   0xA0A8_0080 | 0x0000_0100 | secboot:unlock (256B)
  *   0xA0A8_0180 | 0x0000_0080 | sutinfo (128B)
- *   0xA0A8_0200 | 0x0000_0010 | no use (16B)
+ *   0xA0A8_0200 | 0x0000_0010 | no use 1 (16B)
  *   0xA0A8_0210 | 0x0000_0010 | bset (16B)
  *   0xA0A8_0220 | 0x0000_0010 | bat-id adc (16B)
- *   0xA0A8_0230 | 0x0000_0010 | no use (16B)
+ *   0xA0A8_0230 | 0x0000_0010 | no use 2 (16B)
  *   0xA0A8_0240 | 0x0000_0020 | apr (32B)
- *   0xA0A8_0260 | 0x0000_0180 | no use (384B)
+ *   0xA0A8_0260 | 0x0000_0180 | no use 3 (384B)
  *   0xA0A8_03E0 | 0x0000_0020 | mem (32B)
- *   0xA0A8_0400 | 0x0000_0C00 | no use (3KB)
+ *   0xA0A8_0400 | 0x0000_0C00 | no use 4 (3KB)
  *   0xA0A8_1000 | 0x0000_1000 | e2p (4KB)
  *   0xA0A8_2000 | 0x0000_1000 | cda (4KB)
  *   0xA0A8_3000 | 0x0000_1000 | note (4KB)
@@ -234,7 +240,8 @@
  *   0xA0AD_0000 | 0x0000_1000 | DDR CDT (4KB)
  *   0xA0AD_1000 | 0x0000_1000 | sensor TOF (4KB)
  *   0xA0AD_2000 | 0x0000_8000 | sensor SSC (32KB)
- *   0xA0AD_A000 | 0x0002_6000 | no use 6 (152KB)
+ *   0xA0AD_A000 | 0x0000_6400 | sensordata 2 (25KB)
+ *   0xA0AE_0400 | 0x0001_FC00 | no use 6 (127KB)
  *   -------------------------------------------------------- 9MB
  *   0xA0B0_0000 | 0x0020_0000 | pstore (2MB)
  *   -------------------------------------------------------- 11MB

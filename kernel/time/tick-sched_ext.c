@@ -251,7 +251,7 @@ static int debug_cpu_usage_interval_set(const char *val, struct kernel_param *kp
 module_param_call(debug_cpu_usage_interval, debug_cpu_usage_interval_set, param_get_int, &debug_cpu_usage_interval, 0644);
 
 extern void cpufreq_quick_get_infos(unsigned int cpu, unsigned int *min, unsigned int *max, unsigned int *cur);
-extern void kgsl_pwr_quick_get_infos(unsigned int *min, unsigned int *max, unsigned *curr);
+extern void kgsl_pwr_quick_get_infos(unsigned int *min, unsigned int *max, unsigned *curr, unsigned *therm, unsigned *usage);
 extern void quick_get_cooling_device_freq(unsigned int *curr);
 /*
 * cpu_info_msg: output message
@@ -267,6 +267,8 @@ static void show_cpu_usage_and_freq(char * cpu_info_msg, int msg_len)
 	unsigned int gpu_freq_min = 0;
 	unsigned int gpu_freq_max = 0;
 	unsigned int gpu_curr_freq = 0;
+	unsigned int gpu_therm_freq = 0;
+	unsigned int gpu_usage = 0;
 	unsigned int cooling_device[2] = {0, 0};
 	long cpu_usage = 0;
 
@@ -306,8 +308,8 @@ static void show_cpu_usage_and_freq(char * cpu_info_msg, int msg_len)
 	len -= tmp_len;
 
 	/*GPU Frequency*/
-	kgsl_pwr_quick_get_infos(&gpu_freq_min, &gpu_freq_max, &gpu_curr_freq);
-	tmp_len = snprintf((cpu_info_msg + str_len), len, "[GPU min=%u max=%u curr=%u]\nCPUSG:",gpu_freq_min, gpu_freq_max, gpu_curr_freq);	
+	kgsl_pwr_quick_get_infos(&gpu_freq_min, &gpu_freq_max, &gpu_curr_freq, &gpu_therm_freq, &gpu_usage);
+	tmp_len = snprintf((cpu_info_msg + str_len), len, "[GPU min=%u max=%u curr=%u therm=%u, pct=%u%%]\nCPUSG:",gpu_freq_min, gpu_freq_max, gpu_curr_freq, gpu_therm_freq, gpu_usage);	
 	str_len += tmp_len;
 	len -= tmp_len;
 

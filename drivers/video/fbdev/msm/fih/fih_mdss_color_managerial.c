@@ -36,15 +36,21 @@ static struct dsi_cmd_desc color_manager_cmd = {
 	color_reg
 };
 
+static int ColoeMode=0;
 #define LGD_BRIGHTNESS_ENABLE 0xFF
 #define BRIGHTNESS_RANGE_LEVEL 10
 #define HBM_ENABLE 1
 #define HBM_DISABLE 0
 
 #define COLOR_NORMAL	0x0
+#define COLOR_INITIAL	0x1
 #define COLOR_DCIP3		0x04
 #define COLOR_SRGB		0x08
 #define COLOR_ADOBE		0x0c
+
+#define COLOR_MODE_UNSET 0x0
+#define COLOR_MODE_COLDBOOT 0x1
+#define COLOR_MODE_INIT_FINISH 0x2
 
 void mdss_dsi_panel_color_manager(struct mdss_dsi_ctrl_pdata *ctrl, unsigned char type)
 {
@@ -69,6 +75,38 @@ void mdss_dsi_panel_color_manager(struct mdss_dsi_ctrl_pdata *ctrl, unsigned cha
 	mdss_dsi_cmdlist_put(ctrl, &cmdreq);
 }
 
+void mdss_dsi_color_mode_restore(struct mdss_dsi_ctrl_pdata *ctrl)
+{
+
+	switch(ColoeMode){
+		case COLOR_NORMAL:
+		case COLOR_DCIP3:
+		case COLOR_SRGB:
+		case COLOR_ADOBE:
+			pr_err("%s, Restore Color type %x\n",__func__,(int) ColoeMode);
+			mdss_dsi_panel_color_manager(ctrl,ColoeMode);
+		break;
+		default:
+			break;
+	}
+	return;
+}
+
+void mdss_dsi_colormode_init(struct mdss_dsi_ctrl_pdata *ctrl)
+{
+	struct mdss_panel_info *pinfo = &(ctrl->panel_data.panel_info);
+
+	if(pinfo==NULL){
+		return;
+	}
+	if(!pinfo->color_managerial){
+		pr_err("%s, Not Support\n",__func__);
+		return;
+	}
+	mdss_dsi_color_mode_restore(ctrl);
+	return;
+}
+
 int fih_mdss_color_config(unsigned char type)
 {
 	struct mdss_panel_info *pinfo;
@@ -84,6 +122,7 @@ int fih_mdss_color_config(unsigned char type)
 		pr_err("%s, mfd is NULL\n",__func__);
 		return 0;
 	}
+
 	if(fih_get_blank_mode()!=FB_BLANK_UNBLANK&&!mdss_fb_is_power_on_interactive(mfd)){
 		pr_err("%s, The power state is not allow set up Color %d\n",__func__,type);
 		return 0;
@@ -101,19 +140,36 @@ int fih_mdss_color_config(unsigned char type)
 			if (ctrl->ndx != DSI_CTRL_LEFT)
 				continue;
 		}
+
 		switch(type){
 			case COLOR_NORMAL:
 			case COLOR_DCIP3:
 			case COLOR_SRGB:
 			case COLOR_ADOBE:
-				pr_err("%s, set up type %x\n",__func__,(int) type);
-				mdss_dsi_panel_color_manager(ctrl,type);
+				pr_debug("%s,%d  %x, init =%d\n",__func__,__LINE__,(int) type,pinfo->color_managerial_init);
+				if(pinfo->color_managerial_init==COLOR_MODE_UNSET)
+				{
+					pr_err("%s, property color type is %x\n",__func__,(int) type);
+					pinfo->color_managerial_init=COLOR_MODE_COLDBOOT;
+				}else{
+					pr_err("%s, set up type %x\n",__func__,(int) type);
+					mdss_dsi_panel_color_manager(ctrl,type);
+				}
+				ColoeMode = type;
 			break;
+			case COLOR_INITIAL:
+				if(pinfo->color_managerial_init==COLOR_MODE_COLDBOOT){
+					pr_err("%s,%d Initial color typ to 0x%x\n",__func__,__LINE__,(int) ColoeMode);
+					mdss_dsi_colormode_init(ctrl);
+					pinfo->color_managerial_init=COLOR_MODE_INIT_FINISH;
+				}
+				break;
 			default:
 				pr_err("%s, set up fail type %x\n",__func__,(int) type);
 			break;
 		}
 	}
+
 
 	return 0;
 

@@ -322,7 +322,7 @@ static void gf_kernel_key_input(struct gf_dev *gf_dev, struct gf_key *gf_key)
 	if (GF_KEY_HOME == gf_key->key) {
 		if(gf_dev->key_customer_define == 1)
 		{
-			key_input = GF_KEY_INPUT_HOMEPAGE;
+			key_input = GF_KEY_INPUT_HOMEPAGE;//FIH define to transfer home event to homepage event
 		}
 		else
 		{
@@ -331,7 +331,7 @@ static void gf_kernel_key_input(struct gf_dev *gf_dev, struct gf_key *gf_key)
 	} else if (GF_KEY_POWER == gf_key->key) {
 		if(gf_dev->key_customer_define == 1)
 		{
-			key_input = GF_KEY_INPUT_WAKEUP;
+			key_input = GF_KEY_INPUT_WAKEUP;//FIH define to transfer power event to wakeup event
 		}
 		else
 		{

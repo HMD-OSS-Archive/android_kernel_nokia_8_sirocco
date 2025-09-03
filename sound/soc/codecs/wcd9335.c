@@ -116,7 +116,7 @@
 /* Convert from vout ctl to micbias voltage in mV */
 #define WCD_VOUT_CTL_TO_MICB(v) (1000 + v * 50)
 
-#define TASHA_ZDET_NUM_MEASUREMENTS 900
+#define TASHA_ZDET_NUM_MEASUREMENTS 150
 #define TASHA_MBHC_GET_C1(c)  ((c & 0xC000) >> 14)
 #define TASHA_MBHC_GET_X1(x)  (x & 0x3FFF)
 /* z value compared in milliOhm */
@@ -158,7 +158,7 @@ MODULE_PARM_DESC(cpe_debug_mode, "boot cpe in debug mode");
 
 #define MAX_ON_DEMAND_SUPPLY_NAME_LENGTH    64
 
-#if defined(CONFIG_FIH_NB1) || defined(CONFIG_FIH_A1N)
+#if defined(CONFIG_FIH_NB1) || defined(CONFIG_FIH_A1N) || defined(CONFIG_FIH_F11)
 /*MM-JohnHCChiang-BBS log-00+{ */
 #define BBOX_WCD_PROBE_FAILED do {printk("BBox::UEC;2::3\n");} while(0);
 /*MM-JohnHCChiang-BBS log-00+} */
@@ -4567,6 +4567,7 @@ static int tasha_codec_hphr_dac_event(struct snd_soc_dapm_widget *w,
 	switch (event) {
 	case SND_SOC_DAPM_PRE_PMU:
 		if (!(strcmp(w->name, "RX INT2 DAC"))) {
+			snd_soc_update_bits(codec, WCD9335_ANA_HPH, 0x20, 0x20);
 			snd_soc_update_bits(codec, WCD9335_ANA_HPH, 0x10, 0x10);
 		}
 		if (tasha->anc_func) {
@@ -4608,7 +4609,7 @@ static int tasha_codec_hphr_dac_event(struct snd_soc_dapm_widget *w,
 		break;
 	case SND_SOC_DAPM_PRE_PMD:
 		if (!(strcmp(w->name, "RX INT2 DAC")))
-			snd_soc_update_bits(codec, WCD9335_ANA_HPH, 0x10, 0x00);
+			snd_soc_update_bits(codec, WCD9335_ANA_HPH, 0x30, 0x00);
 		if ((hph_mode == CLS_H_LP) &&
 		   (TASHA_IS_1_1(wcd9xxx))) {
 			snd_soc_update_bits(codec, WCD9335_HPH_L_DAC_CTL,
@@ -4672,8 +4673,6 @@ static int tasha_codec_hphl_dac_event(struct snd_soc_dapm_widget *w,
 			     ((hph_mode == CLS_H_LOHIFI) ?
 			       CLS_H_HIFI : hph_mode));
 
-		if (!(strcmp(w->name, "RX INT1 DAC")))
-			snd_soc_update_bits(codec, WCD9335_ANA_HPH, 0x20, 0x20);
 		tasha_codec_hph_mode_config(codec, event, hph_mode);
 
 		if (tasha->anc_func)
@@ -4703,8 +4702,6 @@ static int tasha_codec_hphl_dac_event(struct snd_soc_dapm_widget *w,
 		}
 		break;
 	case SND_SOC_DAPM_PRE_PMD:
-		if (!(strcmp(w->name, "RX INT1 DAC")))
-			snd_soc_update_bits(codec, WCD9335_ANA_HPH, 0x20, 0x00);
 		if ((hph_mode == CLS_H_LP) &&
 		   (TASHA_IS_1_1(wcd9xxx))) {
 			snd_soc_update_bits(codec, WCD9335_HPH_L_DAC_CTL,
@@ -14406,7 +14403,7 @@ static int tasha_probe(struct platform_device *pdev)
 	if (ret) {
 		dev_err(&pdev->dev, "%s: Codec registration failed, ret = %d\n",
 			__func__, ret);
-#if defined(CONFIG_FIH_NB1) || defined(CONFIG_FIH_A1N)
+#if defined(CONFIG_FIH_NB1) || defined(CONFIG_FIH_A1N) || defined(CONFIG_FIH_F11)
 		/*MM-JohnHCChiang-BBS log-00+{ */
 		printk("BBox;snd_soc_register_codec failed\n");
 		BBOX_WCD_PROBE_FAILED;

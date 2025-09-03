@@ -210,11 +210,11 @@ int fih_checkLimitsMinMax(short *data, int row, int column, int min, int max)
     if (strnstr(saved_command_line, "androidboot.mode=2", strlen(saved_command_line)))
     {
         if (NULL == pfile)
-            pfile = filp_open("/data/misc/touch/touch_data.txt", O_CREAT|O_RDWR, 0660);
+            pfile = filp_open("/data/vendor/misc/touch/touch_data.txt", O_CREAT|O_RDWR, 0660);
         if (IS_ERR(pfile))
         {
 			ret = (int)PTR_ERR(pfile);        
-            pr_err("[ FTS ] error occured while opening file /data/misc/touch/touch_data.txt, ret = %d\n", ret);
+            pr_err("[ FTS ] error occured while opening file /data/vendor/misc/touch/touch_data.txt, ret = %d\n", ret);
         }
         else
         {
@@ -267,11 +267,11 @@ int fih_write_switch_antenna(int tp_status)
     loff_t pos;
 
     if (NULL == pfile)
-       pfile = filp_open("/data/misc/radio/tp_side_status", O_CREAT|O_RDWR, 0666);
+       pfile = filp_open("/data/vendor/misc/radio/tp_side_status", O_CREAT|O_RDWR, 0666);
     if (IS_ERR(pfile))
     {
         ret = (int)PTR_ERR(pfile);
-        pr_err("[ FTS ] error occured while opening file /data/misc/radio/tp_side_status, ret = %d\n", ret);
+        pr_err("[ FTS ] error occured while opening file /data/vendor/misc/radio/tp_side_status, ret = %d\n", ret);
     }
     else
     {

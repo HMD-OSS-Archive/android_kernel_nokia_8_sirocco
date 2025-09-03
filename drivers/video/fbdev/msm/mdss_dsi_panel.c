@@ -46,6 +46,10 @@ extern struct fih_touch_cb touch_cb;
 #include "fih/fih_mdss_global.h"
 #endif
 
+#ifdef CONFIG_PANEL_COLOR_MANAGERIAL
+#include "fih/fih_mdss_color_managerial.h"
+#endif
+
 #endif
 #define DT_CMD_HDR 6
 #define DEFAULT_MDP_TRANSFER_TIME 14000
@@ -1107,6 +1111,9 @@ static int mdss_dsi_panel_on(struct mdss_panel_data *pdata)
 	#endif
 #endif
 	//SW8-DH-Touch-Notify-00+
+#if defined(CONFIG_PANEL_COLOR_MANAGERIAL) || defined(CONFIG_FIH_A1N)
+	mdss_dsi_color_mode_restore(ctrl);
+#endif
 
 end:
 	pr_info("%s:-\n", __func__);

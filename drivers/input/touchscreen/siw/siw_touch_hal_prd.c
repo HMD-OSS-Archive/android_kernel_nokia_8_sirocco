@@ -2695,10 +2695,10 @@ static int fih_save_rawdata(struct siw_hal_prd_data *prd,
 	if (strnstr(saved_command_line, "androidboot.mode=2", strlen(saved_command_line)))
 	{
 		if (NULL == pfile)
-			pfile = filp_open("/data/misc/touch/touch_data.txt", O_CREAT|O_RDWR, 0660);
+			pfile = filp_open("/data/vendor/misc/touch/touch_data.txt", O_CREAT|O_RDWR, 0660);
 		if (IS_ERR(pfile))
 		{
-			pr_err("[focal] error occured while opening file /data/misc/touch/touch_data.txt.\n");
+			pr_err("[focal] error occured while opening file /data/vendor/misc/touch/touch_data.txt.\n");
 		}
 		else
 		{

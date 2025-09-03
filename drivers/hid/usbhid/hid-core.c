@@ -974,7 +974,6 @@ static int usbhid_parse(struct hid_device *hid)
 	int num_descriptors;
 	size_t offset = offsetof(struct hid_descriptor, desc);
 
-
 	quirks = usbhid_lookup_quirk(le16_to_cpu(dev->descriptor.idVendor),
 			le16_to_cpu(dev->descriptor.idProduct));
 
@@ -995,7 +994,6 @@ static int usbhid_parse(struct hid_device *hid)
 		dbg_hid("class descriptor not present\n");
 		return -ENODEV;
 	}
-
 
 	if (hdesc->bLength < sizeof(struct hid_descriptor)) {
 		dbg_hid("hid descriptor is too short\n");

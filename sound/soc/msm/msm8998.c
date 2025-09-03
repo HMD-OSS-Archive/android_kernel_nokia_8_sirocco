@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2017, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2016-2018, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -91,7 +91,7 @@
 #ifdef USE_QC_HIFI_AMP
 #define MSM_HIFI_ON 1
 #endif
-#if defined(CONFIG_FIH_NB1) || defined(CONFIG_FIH_A1N)
+#if defined(CONFIG_FIH_NB1) || defined(CONFIG_FIH_A1N)  || defined(CONFIG_FIH_F11)
 /*MM-JohnHCChiang-BBS log-00+{ */
 #define BBOX_WCD_REGISTER_ADSP_NOTIFIER_FAILED do {printk("BBox::UEC;2::2\n");} while(0);
 /*MM-JohnHCChiang-BBS log-00+} */
@@ -406,7 +406,7 @@ static struct dev_config mi2s_rx_cfg[] = {
 	[PRIM_MI2S] = {SAMPLING_RATE_48KHZ, SNDRV_PCM_FORMAT_S16_LE, 2},
 	[SEC_MI2S]  = {SAMPLING_RATE_48KHZ, SNDRV_PCM_FORMAT_S16_LE, 2},
 	[TERT_MI2S] = {SAMPLING_RATE_48KHZ, SNDRV_PCM_FORMAT_S16_LE, 2},
-#if defined(CONFIG_FIH_PM1) || defined(CONFIG_FIH_A1N) || defined(CONFIG_FIH_NB1)
+#if defined(CONFIG_FIH_PM1) || defined(CONFIG_FIH_A1N) || defined(CONFIG_FIH_NB1)  || defined(CONFIG_FIH_F11)
 	[QUAT_MI2S] = {SAMPLING_RATE_48KHZ, SNDRV_PCM_FORMAT_S16_LE, 1},
 #else
 	[QUAT_MI2S] = {SAMPLING_RATE_48KHZ, SNDRV_PCM_FORMAT_S16_LE, 2},
@@ -453,6 +453,8 @@ static char const *slim_sample_rate_text[] = {"KHZ_8", "KHZ_16",
 					"KHZ_88P2", "KHZ_96", "KHZ_176P4",
 					"KHZ_192", "KHZ_352P8", "KHZ_384"};
 static char const *bt_sample_rate_text[] = {"KHZ_8", "KHZ_16", "KHZ_48"};
+static char const *bt_sample_rate_rx_text[] = {"KHZ_8", "KHZ_16", "KHZ_48"};
+static char const *bt_sample_rate_tx_text[] = {"KHZ_8", "KHZ_16", "KHZ_48"};
 static const char *const usb_ch_text[] = {"One", "Two", "Three", "Four",
 					   "Five", "Six", "Seven",
 					   "Eight"};
@@ -508,6 +510,8 @@ static SOC_ENUM_SINGLE_EXT_DECL(slim_0_tx_sample_rate, slim_sample_rate_text);
 static SOC_ENUM_SINGLE_EXT_DECL(slim_5_rx_sample_rate, slim_sample_rate_text);
 static SOC_ENUM_SINGLE_EXT_DECL(slim_6_rx_sample_rate, slim_sample_rate_text);
 static SOC_ENUM_SINGLE_EXT_DECL(bt_sample_rate, bt_sample_rate_text);
+static SOC_ENUM_SINGLE_EXT_DECL(bt_sample_rate_rx, bt_sample_rate_rx_text);
+static SOC_ENUM_SINGLE_EXT_DECL(bt_sample_rate_tx, bt_sample_rate_tx_text);
 static SOC_ENUM_SINGLE_EXT_DECL(usb_rx_sample_rate, usb_sample_rate_text);
 static SOC_ENUM_SINGLE_EXT_DECL(usb_tx_sample_rate, usb_sample_rate_text);
 static SOC_ENUM_SINGLE_EXT_DECL(ext_disp_rx_sample_rate,
@@ -584,7 +588,7 @@ static struct wcd_mbhc_config wcd_mbhc_cfg = {
 	.swap_gnd_mic = NULL,
 	.hs_ext_micbias = true,
 	.key_code[0] = KEY_MEDIA,
-#if defined(CONFIG_FIH_NB1)
+#if defined(CONFIG_FIH_NB1)  || defined(CONFIG_FIH_F11)
 	.key_code[1] = KEY_VOLUMEUP,
 	.key_code[2] = KEY_VOLUMEDOWN,
 	.key_code[3] = 0,
@@ -1103,6 +1107,94 @@ static int msm_bt_sample_rate_put(struct snd_kcontrol *kcontrol,
 		 slim_rx_cfg[SLIM_RX_7].sample_rate,
 		 slim_tx_cfg[SLIM_TX_7].sample_rate,
 		 ucontrol->value.enumerated.item[0]);
+
+	return 0;
+}
+
+static int msm_bt_sample_rate_rx_get(struct snd_kcontrol *kcontrol,
+					struct snd_ctl_elem_value *ucontrol)
+{
+	switch (slim_rx_cfg[SLIM_RX_7].sample_rate) {
+	case SAMPLING_RATE_48KHZ:
+		ucontrol->value.integer.value[0] = 2;
+		break;
+	case SAMPLING_RATE_16KHZ:
+		ucontrol->value.integer.value[0] = 1;
+		break;
+	case SAMPLING_RATE_8KHZ:
+	default:
+		ucontrol->value.integer.value[0] = 0;
+		break;
+	}
+	pr_debug("%s: sample rate = %d", __func__,
+		slim_rx_cfg[SLIM_RX_7].sample_rate);
+
+	return 0;
+}
+
+static int msm_bt_sample_rate_rx_put(struct snd_kcontrol *kcontrol,
+					struct snd_ctl_elem_value *ucontrol)
+{
+	switch (ucontrol->value.integer.value[0]) {
+	case 1:
+		slim_rx_cfg[SLIM_RX_7].sample_rate = SAMPLING_RATE_16KHZ;
+		break;
+	case 2:
+		slim_rx_cfg[SLIM_RX_7].sample_rate = SAMPLING_RATE_48KHZ;
+		break;
+	case 0:
+	default:
+		slim_rx_cfg[SLIM_RX_7].sample_rate = SAMPLING_RATE_8KHZ;
+		break;
+	}
+	pr_debug("%s: sample rates: slim7_rx = %d, value = %d\n",
+		 __func__,
+		slim_rx_cfg[SLIM_RX_7].sample_rate,
+		ucontrol->value.enumerated.item[0]);
+
+	return 0;
+}
+
+static int msm_bt_sample_rate_tx_get(struct snd_kcontrol *kcontrol,
+					struct snd_ctl_elem_value *ucontrol)
+{
+	switch (slim_tx_cfg[SLIM_TX_7].sample_rate) {
+	case SAMPLING_RATE_48KHZ:
+		ucontrol->value.integer.value[0] = 2;
+		break;
+	case SAMPLING_RATE_16KHZ:
+		ucontrol->value.integer.value[0] = 1;
+		break;
+	case SAMPLING_RATE_8KHZ:
+	default:
+		ucontrol->value.integer.value[0] = 0;
+		break;
+	}
+	pr_debug("%s: sample rate = %d", __func__,
+		slim_tx_cfg[SLIM_TX_7].sample_rate);
+
+	return 0;
+}
+
+static int msm_bt_sample_rate_tx_put(struct snd_kcontrol *kcontrol,
+					struct snd_ctl_elem_value *ucontrol)
+{
+	switch (ucontrol->value.integer.value[0]) {
+	case 1:
+		slim_tx_cfg[SLIM_TX_7].sample_rate = SAMPLING_RATE_16KHZ;
+		break;
+	case 2:
+		slim_tx_cfg[SLIM_TX_7].sample_rate = SAMPLING_RATE_48KHZ;
+		break;
+	case 0:
+	default:
+		slim_tx_cfg[SLIM_TX_7].sample_rate = SAMPLING_RATE_8KHZ;
+		break;
+	}
+	pr_debug("%s: sample rates: slim7_tx = %d, value = %d\n",
+		 __func__,
+		slim_tx_cfg[SLIM_TX_7].sample_rate,
+		ucontrol->value.enumerated.item[0]);
 
 	return 0;
 }
@@ -2706,6 +2798,12 @@ static const struct snd_kcontrol_new msm_snd_controls[] = {
 	SOC_ENUM_EXT("BT SampleRate", bt_sample_rate,
 			msm_bt_sample_rate_get,
 			msm_bt_sample_rate_put),
+	SOC_ENUM_EXT("BT SampleRate RX", bt_sample_rate_rx,
+			msm_bt_sample_rate_rx_get,
+			msm_bt_sample_rate_rx_put),
+	SOC_ENUM_EXT("BT SampleRate TX", bt_sample_rate_tx,
+			msm_bt_sample_rate_tx_get,
+			msm_bt_sample_rate_tx_put),
 	SOC_ENUM_EXT("USB_AUDIO_RX SampleRate", usb_rx_sample_rate,
 			usb_audio_rx_sample_rate_get,
 			usb_audio_rx_sample_rate_put),
@@ -3918,7 +4016,7 @@ static void *def_tasha_mbhc_cal(void)
 	btn_high = ((void *)&btn_cfg->_v_btn_low) +
 		(sizeof(btn_cfg->_v_btn_low[0]) * btn_cfg->num_btn);
 
-#if defined(CONFIG_FIH_NB1) || defined(CONFIG_FIH_A1N)
+#if defined(CONFIG_FIH_NB1) || defined(CONFIG_FIH_A1N)  || defined(CONFIG_FIH_F11)
 	/*NB1-3197-MM-JohnHCChiang-Fenda Headset-00+{ */
 	btn_high[0] = 105;
 	/*NB1-3197-MM-JohnHCChiang-Fenda Headset-00+} */
@@ -4381,7 +4479,7 @@ static int msm_set_pinctrl(struct msm_pinctrl_info *pinctrl_info,
 {
 	int ret = 0;
 	int curr_state = 0;
-#if defined(CONFIG_FIH_NB1) || defined(CONFIG_FIH_A1N)
+#if defined(CONFIG_FIH_NB1) || defined(CONFIG_FIH_A1N)  || defined(CONFIG_FIH_F11)
 	return 0;
 #endif
 
@@ -4478,7 +4576,7 @@ static int msm_get_pinctrl(struct platform_device *pdev)
 	struct msm_pinctrl_info *pinctrl_info = NULL;
 	struct pinctrl *pinctrl;
 	int ret;
-#if defined(CONFIG_FIH_NB1) || defined(CONFIG_FIH_A1N)
+#if defined(CONFIG_FIH_NB1) || defined(CONFIG_FIH_A1N)  || defined(CONFIG_FIH_F11)
 	return 0;
 #endif
 
@@ -4666,7 +4764,7 @@ static int msm_mi2s_snd_startup(struct snd_pcm_substream *substream)
 	struct snd_soc_dai *cpu_dai = rtd->cpu_dai;
 	int index = cpu_dai->id;
 	unsigned int fmt = SND_SOC_DAIFMT_CBS_CFS;
-#if defined(CONFIG_FIH_NB1) || defined(CONFIG_FIH_A1N)
+#if defined(CONFIG_FIH_NB1) || defined(CONFIG_FIH_A1N)  || defined(CONFIG_FIH_F11)
 	struct snd_soc_card *card = rtd->card;
 	struct msm_asoc_mach_data *pdata = snd_soc_card_get_drvdata(card);
 	struct msm_pinctrl_info *pinctrl_info = &pdata->pinctrl_info;
@@ -4685,7 +4783,7 @@ static int msm_mi2s_snd_startup(struct snd_pcm_substream *substream)
 			__func__, cpu_dai->id);
 		goto done;
 	}
-#if defined(CONFIG_FIH_NB1) || defined(CONFIG_FIH_A1N)
+#if defined(CONFIG_FIH_NB1) || defined(CONFIG_FIH_A1N)  || defined(CONFIG_FIH_F11)
 	if (index == QUAT_MI2S) {
 		ret_pinctrl = msm_set_pinctrl(pinctrl_info, STATE_MI2S_ACTIVE);
 		if (ret_pinctrl) {
@@ -4748,7 +4846,7 @@ static void msm_mi2s_snd_shutdown(struct snd_pcm_substream *substream)
 	int ret;
 	struct snd_soc_pcm_runtime *rtd = substream->private_data;
 	int index = rtd->cpu_dai->id;
-#if defined(CONFIG_FIH_NB1) || defined(CONFIG_FIH_A1N)
+#if defined(CONFIG_FIH_NB1) || defined(CONFIG_FIH_A1N) || defined(CONFIG_FIH_F11)
 	struct snd_soc_card *card = rtd->card;
 	struct msm_asoc_mach_data *pdata = snd_soc_card_get_drvdata(card);
 	struct msm_pinctrl_info *pinctrl_info = &pdata->pinctrl_info;
@@ -4770,7 +4868,7 @@ static void msm_mi2s_snd_shutdown(struct snd_pcm_substream *substream)
 				__func__, index, ret);
 	}
 	mutex_unlock(&mi2s_intf_conf[index].lock);
-#if defined(CONFIG_FIH_NB1) || defined(CONFIG_FIH_A1N)
+#if defined(CONFIG_FIH_NB1) || defined(CONFIG_FIH_A1N) || defined(CONFIG_FIH_F11)
 	if (index == QUAT_MI2S) {
 		ret_pinctrl = msm_set_pinctrl(pinctrl_info, STATE_DISABLE);
 		if (ret_pinctrl)
@@ -6605,7 +6703,7 @@ static struct snd_soc_dai_link msm_mi2s_be_dai_links[] = {
 		.stream_name = "Quaternary MI2S Playback",
 		.cpu_dai_name = "msm-dai-q6-mi2s.3",
 		.platform_name = "msm-pcm-routing",
-#if defined(CONFIG_FIH_NB1) || defined(CONFIG_FIH_A1N) || defined(CONFIG_FIH_PM1)
+#if defined(CONFIG_SND_SOC_TFA98XX) || defined(CONFIG_SND_SOC_TFA9892) || defined(CONFIG_FIH_PM1)
 //MM-JC-Porting smartamp speaker-00+{
 		.codec_name = "tfa98xx.9-0034",
 		.codec_dai_name = "tfa98xx-aif-9-34",
@@ -7775,7 +7873,7 @@ static int msm_asoc_machine_probe(struct platform_device *pdev)
 			ret);
 #endif
 
-#if defined(CONFIG_FIH_NB1) || defined(CONFIG_FIH_A1N)
+#if defined(CONFIG_FIH_NB1) || defined(CONFIG_FIH_A1N) || defined(CONFIG_FIH_F11)
     /* Parse pinctrl info from devicetree */
 	ret = msm_get_pinctrl(pdev);
 	if (!ret) {
@@ -7793,7 +7891,7 @@ static int msm_asoc_machine_probe(struct platform_device *pdev)
 	is_initial_boot = true;
 	ret = audio_notifier_register("msm8998", AUDIO_NOTIFIER_ADSP_DOMAIN,
 				      &service_nb);
-#if defined(CONFIG_FIH_NB1) || defined(CONFIG_FIH_A1N)
+#if defined(CONFIG_FIH_NB1) || defined(CONFIG_FIH_A1N) || defined(CONFIG_FIH_F11)
 	if (ret < 0){
 		pr_err("%s: Audio notifier register failed ret = %d\n",
 			__func__, ret);
@@ -7845,7 +7943,7 @@ err:
 		pdata->us_euro_gpio = 0;
 	}
 #endif
-#if defined(CONFIG_FIH_NB1) || defined(CONFIG_FIH_A1N)
+#if defined(CONFIG_FIH_NB1) || defined(CONFIG_FIH_A1N) || defined(CONFIG_FIH_F11)
 	msm_release_pinctrl(pdev);
 #endif
 	devm_kfree(&pdev->dev, pdata);

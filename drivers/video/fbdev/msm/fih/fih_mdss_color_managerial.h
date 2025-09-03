@@ -16,4 +16,5 @@
 
 extern int fih_mdss_color_config(unsigned char type);
 extern int fih_mdss_high_brightness_configure(bool enable);
-
+extern void mdss_dsi_color_mode_restore(struct mdss_dsi_ctrl_pdata *ctrl);
+extern void mdss_dsi_colormode_init(struct mdss_dsi_ctrl_pdata *ctrl);

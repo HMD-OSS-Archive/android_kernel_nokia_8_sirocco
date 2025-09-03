@@ -584,6 +584,7 @@ static int diag_remove_client_entry(struct file *file)
 static int diagchar_close(struct inode *inode, struct file *file)
 {
 	int ret;
+
 	DIAG_LOG(DIAG_DEBUG_USERSPACE, "diag: process exit %s\n",
 		current->comm);
 	ret = diag_remove_client_entry(file);

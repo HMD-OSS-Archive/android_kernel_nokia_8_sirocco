@@ -4881,10 +4881,10 @@ static void fullRawCap(void)
 		goto exit;
 	}
 
-	RawdataFile = filp_open("/data/misc/touch/touch_data.txt", O_CREAT | O_RDWR, 0660);
+	RawdataFile = filp_open("/data/vendor/misc/touch/touch_data.txt", O_CREAT | O_RDWR, 0660);
 	if(IS_ERR(RawdataFile))
 	{
-		pr_err("F@TOUCH : %s open /data/misc/touch/touch_data.txt = %ld\n", __func__, PTR_ERR(RawdataFile));
+		pr_err("F@TOUCH : %s open /data/vendor/misc/touch/touch_data.txt = %ld\n", __func__, PTR_ERR(RawdataFile));
 		goto exit;
 	}
 ////////////////////////////////////////////////////////////////////////////////////////

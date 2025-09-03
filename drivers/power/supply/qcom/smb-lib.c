@@ -32,11 +32,11 @@
 #endif
 //SW8-DH-Notify_USB_status_to_LGD_touch+]
 
-/*  - A1N-5 - Rerun apsd if detect floating charger */
+/* 5 - Rerun apsd if detect floating charger */
 #ifdef CONFIG_FIH_A1N
 static bool first_apsd_complete = 0;
 #endif
-/* end FIH - A1N-5 */
+/* 5 */
 static bool forecast_charging = false;
 
 #define smblib_err(chg, fmt, ...)		\
@@ -54,7 +54,7 @@ static bool forecast_charging = false;
 	} while (0)
 
 
-/* -105 - [BBS] Porting BBS log for battery and charging */
+/* 105 - [BBS] Porting BBS log for battery and charging */
 #define BBS_LOG 1
 #ifdef BBS_LOG
 #define QPNPCHG_CHARGER_FLOATING_CHARGER_ERROR do {printk("BBox;%s: Charger floating charger\n", __func__); printk("BBox::UEC;3::1\n");} while (0)
@@ -636,7 +636,7 @@ static int smblib_notifier_call(struct notifier_block *nb,
 	if (!chg->pl.psy && !strcmp(psy->desc->name, "parallel"))
 		chg->pl.psy = psy;
 
-	/* -3293 - Show battery info */
+	/* 3293 - Show battery info */
 	if(chg->show_batt_info_en)
 		schedule_delayed_work(&chg->update_batt_info_work, msecs_to_jiffies(30000));
 	/* end NB1-3293 */
@@ -1455,24 +1455,24 @@ out:
 	return rc;
 }
 
-/*  - NB1-506 - Create a node to on/off otg */
+/* 506 - Create a node to on/off otg */
 #if defined(CONFIG_FIH_NB1) || defined(CONFIG_FIH_A1N)
 extern char fih_otg_disable_mode; // FIHTDC, IdaChiang, add for OTG FREQ
 #endif
-/* end FIH - NB1-506 */
+/* 506 */
 
 static int _smblib_vbus_regulator_enable(struct regulator_dev *rdev)
 {
 	struct smb_charger *chg = rdev_get_drvdata(rdev);
 	int rc;
-	/*  - NB1-506 - Create a node to on/off otg */
+	/* 506 - Create a node to on/off otg */
 #if defined(CONFIG_FIH_NB1) || defined(CONFIG_FIH_A1N)
 	if(fih_otg_disable_mode){
 		smblib_err(chg, "OTG has been disabled\n");
 		return -ECONNABORTED;
 	}
 #endif
-/* end FIH - NB1-506 */
+/* 506 */
 
 
 	smblib_dbg(chg, PR_OTG, "halt 1 in 8 mode\n");
@@ -2430,7 +2430,7 @@ static int smblib_get_prop_dfp_mode(struct smb_charger *chg)
 	return POWER_SUPPLY_TYPEC_NONE;
 }
 
-/*  - NB1-680 - Dump typec sts register value */
+/* 680 - Dump typec sts register value */
 int smblib_dump_typec_sts(struct smb_charger *chg,
 			       union power_supply_propval *val)
 {
@@ -2451,9 +2451,9 @@ int smblib_dump_typec_sts(struct smb_charger *chg,
 
 	return rc;
 }
-/* end FIH - NB1-680 */
+/* 680 */
 
-/* WayneWCShiue - A1N-1713 - Add periodical checker mechanism for charging */
+/* 1713 - Add periodical checker mechanism for charging */
 #define RETRY_TIMES 3
 void FIH_chg_reEnable(struct smb_charger *chg) {
 	int rc = 0;
@@ -2575,7 +2575,7 @@ void FIH_chg_abnormal_check(struct smb_charger *chg)
 }
 /* end A1N-1713 */
 
-/* -8555 - [BAT] Inform Battery Protect AP once the battery can only charge to 4.1V */
+/* 8555 - [BAT] Inform Battery Protect AP once the battery can only charge to 4.1V */
 /* 1. The charger is online
   * 2. The charging status is FULL or DISCHARGING
   * 3. Msoc is lower than 94%
@@ -2671,7 +2671,7 @@ void FIH_soft_JEITA_recharge_check(struct smb_charger *chg) {
 }
 /* end NB1-8555 */
 
-/* -3730 - Change JEITA dynamically */
+/* 3730 - Change JEITA dynamically */
 void FIH_adjust_JEITA(struct smb_charger *chg) {
 	int rc = 0;
 	u8 stat = 0;
@@ -2937,7 +2937,7 @@ int smblib_set_prop_sdp_current_max(struct smb_charger *chg,
 				    const union power_supply_propval *val)
 {
 	int rc = 0;
-       /* -7524 - Adjust ICL according by Vrd */
+       /* 7524 - Adjust ICL according by Vrd */
        int typec_mode = 0;
        bool legacy_cable = 0;
        union power_supply_propval final_val = {0, };
@@ -2945,7 +2945,7 @@ int smblib_set_prop_sdp_current_max(struct smb_charger *chg,
 
 	if (!chg->pd_active) {
 		rc = smblib_handle_usb_current(chg, val->intval);
-               /* -7524 - Adjust ICL according by Vrd */
+               /* 7524 - Adjust ICL according by Vrd */
                final_val.intval = val->intval;
                typec_mode = smblib_get_prop_ufp_mode(chg);
                legacy_cable = (bool)(chg->typec_status[4] & TYPEC_LEGACY_CABLE_STATUS_BIT);
@@ -3346,7 +3346,7 @@ int smblib_set_prop_pd_in_hard_reset(struct smb_charger *chg,
 	return rc;
 }
 
-/* O-1214 - Use FIH_soft_JEITA_recharge_check to instead of Qualcomm's function */
+/* 1214 - Use FIH_soft_JEITA_recharge_check to instead of Qualcomm's function */
 #if 0
 static int smblib_recover_from_soft_jeita(struct smb_charger *chg)
 {
@@ -3584,9 +3584,9 @@ irqreturn_t smblib_handle_chg_state_change(int irq, void *data)
 	u8 stat;
 	int rc;
 
-	/*  - NB1-680 - Add more log for usb attach/detach */
+	/* 680 - Add more log for usb attach/detach */
 	pr_info("%s: %s: IRQ: %s\n", chg->name, __func__, irq_data->name);
-	/* end FIH - NB1-680 */
+	/* 680 */
 	forecast_charging = false;
 
 	rc = smblib_read(chg, BATTERY_CHARGER_STATUS_1_REG, &stat);
@@ -3607,19 +3607,19 @@ irqreturn_t smblib_handle_batt_temp_changed(int irq, void *data)
 	struct smb_irq_data *irq_data = data;
 	struct smb_charger *chg = irq_data->parent_data;
 	union power_supply_propval val = {0, };
-	/* O-1214 - Use FIH_soft_JEITA_recharge_check to instead of Qualcomm's function */
+	/* 1214 - Use FIH_soft_JEITA_recharge_check to instead of Qualcomm's function */
 	// int rc;
 	/* end NB1O-1214 */
 
-	/* -3730 - Change JEITA dynamically */
+	/* 3730 - Change JEITA dynamically */
 	FIH_adjust_JEITA(chg);
 	/* end NB1-3730 */
 
-	/* -8555 - [BAT] Inform Battery Protect AP once the battery can only charge to 4.1V */
+	/* 8555 - [BAT] Inform Battery Protect AP once the battery can only charge to 4.1V */
 	//FIH_soft_JEITA_recharge_check(chg);
 	/* end NB1-8555 */
 
-	/* O-1214 - Use FIH_soft_JEITA_recharge_check to instead of Qualcomm's function */
+	/* 1214 - Use FIH_soft_JEITA_recharge_check to instead of Qualcomm's function */
 	#if 0
 	rc = smblib_recover_from_soft_jeita(chg);
 	if (rc < 0) {
@@ -3646,9 +3646,9 @@ irqreturn_t smblib_handle_batt_psy_changed(int irq, void *data)
 	struct smb_irq_data *irq_data = data;
 	struct smb_charger *chg = irq_data->parent_data;
 
-	/*  - NB1-680 - Add more log for usb attach/detach */
+	/* 680 - Add more log for usb attach/detach */
 	pr_info("%s: %s: IRQ: %s\n", chg->name, __func__, irq_data->name);
-	/* end FIH - NB1-680 */
+	/* 680 */
 
 	#ifdef BBS_LOG
 	if(strstr(irq_data->name, "bat-therm-or-id-missing") != NULL)
@@ -3664,9 +3664,9 @@ irqreturn_t smblib_handle_usb_psy_changed(int irq, void *data)
 	struct smb_irq_data *irq_data = data;
 	struct smb_charger *chg = irq_data->parent_data;
 
-	/*  - NB1-680 - Add more log for usb attach/detach */
+	/* 680 - Add more log for usb attach/detach */
 	pr_info("%s: %s: IRQ: %s\n", chg->name, __func__, irq_data->name);
-	/* end FIH - NB1-680 */
+	/* 680 */
 	power_supply_changed(chg->usb_psy);
 	return IRQ_HANDLED;
 }
@@ -3677,9 +3677,9 @@ irqreturn_t smblib_handle_usbin_uv(int irq, void *data)
 	struct smb_charger *chg = irq_data->parent_data;
 	struct storm_watch *wdata;
 
-	/*  - NB1-680 - Add more log for usb attach/detach */
+	/* 680 - Add more log for usb attach/detach */
 	pr_info("%s: %s: IRQ: %s\n", chg->name, __func__, irq_data->name);
-	/* end FIH - NB1-680 */
+	/* 680 */
 	if (!chg->irq_info[SWITCH_POWER_OK_IRQ].irq_data)
 		return IRQ_HANDLED;
 
@@ -3800,9 +3800,9 @@ void smblib_usb_plugin_locked(struct smb_charger *chg)
 					vbus_rising ? "attached" : "detached");
 
 
-	/* WayneWCShiue - A1N-1713 - Add periodical checker mechanism for charging */
+	/* 1713 - Add periodical checker mechanism for charging */
 	chg->fih_reEnable_max_limit = 0;
-	/* end FIH - A1N-1713 */
+	/* 1713 */
 
 	//SW8-DH-Notify_USB_status_to_LGD_touch+[
 	#ifdef CONFIG_TOUCHSCREEN_SIW
@@ -3823,9 +3823,9 @@ irqreturn_t smblib_handle_usb_plugin(int irq, void *data)
 	else
 		smblib_usb_plugin_locked(chg);
 
-	/*  - NB1-680 - Add more log for usb attach/detach */
+	/* 680 - Add more log for usb attach/detach */
 	pr_info("%s: %s: IRQ: %s\n", chg->name, __func__, irq_data->name);
-	/* end FIH - NB1-680 */
+	/* 680 */
 	if (smblib_get_prop_usb_present(chg, &val) < 0 || !val.intval) {
 		forecast_charging = false;
 	} else {
@@ -4034,7 +4034,7 @@ static void smblib_handle_hvdcp_detect_done(struct smb_charger *chg,
 
 static void smblib_force_legacy_icl(struct smb_charger *chg, int pst)
 {
-	/* -6004 - Cannot meet the requirement of Google Dual-port Type-C charger */
+	/* 6004 - Cannot meet the requirement of Google Dual-port Type-C charger */
 	int typec_mode = 0;
 	int rp_ua;
 	/* end NB1-6004 */
@@ -4062,7 +4062,7 @@ static void smblib_force_legacy_icl(struct smb_charger *chg, int pst)
 		typec_mode = smblib_get_prop_typec_mode(chg);
 		rp_ua = get_rp_based_dcp_current(chg, typec_mode);
 		vote(chg->usb_icl_votable, LEGACY_UNKNOWN_VOTER, true, rp_ua);
-		/* -6004 - Cannot meet the requirement of Google Dual-port Type-C charger */
+		/* 6004 - Cannot meet the requirement of Google Dual-port Type-C charger */
 		typec_mode = smblib_get_prop_ufp_mode(chg);
 		if (typec_mode == POWER_SUPPLY_TYPEC_SOURCE_MEDIUM) {
 			vote(chg->usb_icl_votable, LEGACY_UNKNOWN_VOTER, true, TYPEC_MEDIUM_CURRENT_UA);
@@ -4140,7 +4140,7 @@ static void smblib_handle_apsd_done(struct smb_charger *chg, bool rising)
 			smblib_notify_device_mode(chg, true);
 	case OCP_CHARGER_BIT:
 	case FLOAT_CHARGER_BIT:
-/*  - A1N-5 - Rerun apsd if detect floating charger */
+/* 5 - Rerun apsd if detect floating charger */
 #ifdef CONFIG_FIH_A1N
 		if(apsd_result->bit == FLOAT_CHARGER_BIT && !first_apsd_complete){
 			smblib_rerun_apsd(chg);
@@ -4148,7 +4148,7 @@ static void smblib_handle_apsd_done(struct smb_charger *chg, bool rising)
 			return;
 		}
 #endif
-/* end FIH - A1N-5 */
+/* 5 */
 
 		/* if not DCP then no hvdcp timeout happens, Enable pd here. */
 		vote(chg->pd_disallowed_votable_indirect, HVDCP_TIMEOUT_VOTER,
@@ -4163,11 +4163,11 @@ static void smblib_handle_apsd_done(struct smb_charger *chg, bool rising)
 		break;
 	}
 
-/*  - A1N-5 - Rerun apsd if detect floating charger */
+/* 5 - Rerun apsd if detect floating charger */
 #ifdef CONFIG_FIH_A1N
 	first_apsd_complete = 1;
 #endif
-/* end FIH - A1N-5 */
+/* 5 */
 
 	smblib_dbg(chg, PR_INTERRUPT, "IRQ: apsd-done rising; %s detected\n",
 		   apsd_result->name);
@@ -4183,9 +4183,9 @@ irqreturn_t smblib_handle_usb_source_change(int irq, void *data)
 	const struct apsd_result *apsd_result;
 	#endif
 
-	/*  - NB1-680 - Add more log for usb attach/detach */
+	/* 680 - Add more log for usb attach/detach */
 	pr_info("%s: %s: IRQ: %s\n", chg->name, __func__, irq_data->name);
-	/* end FIH - NB1-680 */
+	/* 680 */
 
 	rc = smblib_read(chg, APSD_STATUS_REG, &stat);
 	if (rc < 0) {
@@ -4296,11 +4296,11 @@ static void smblib_handle_typec_removal(struct smb_charger *chg)
 	vote(chg->apsd_disable_votable, PD_HARD_RESET_VOTER, false, 0);
 	vote(chg->apsd_disable_votable, PD_VOTER, false, 0);
 
-/*  - A1N-5 - Rerun apsd if detect floating charger */
+/* 5 - Rerun apsd if detect floating charger */
 #ifdef CONFIG_FIH_A1N
 	first_apsd_complete = 0;
 #endif
-/* end FIH - A1N-5 */
+/* 5 */
 
 	cancel_delayed_work_sync(&chg->pl_enable_work);
 	cancel_delayed_work_sync(&chg->hvdcp_detect_work);
@@ -4538,10 +4538,6 @@ static void smblib_usb_typec_change(struct smb_charger *chg)
 {
 	int rc;
 
-	/* -6004 - Cannot meet the requirement of Google Dual-port Type-C charger */
-	int typec_mode = 0;
-	/* end NB1-6004 */
-
 	rc = smblib_multibyte_read(chg, TYPE_C_STATUS_1_REG,
 							chg->typec_status, 5);
 	if (rc < 0) {
@@ -4556,17 +4552,6 @@ static void smblib_usb_typec_change(struct smb_charger *chg)
 
 	if (chg->typec_status[3] & TYPEC_VCONN_OVERCURR_STATUS_BIT)
 		schedule_work(&chg->vconn_oc_work);
-
-	/* -6004 - Cannot meet the requirement of Google Dual-port Type-C charger */
-	typec_mode = smblib_get_prop_ufp_mode(chg);
-	if (typec_mode == POWER_SUPPLY_TYPEC_SOURCE_MEDIUM) {
-		vote(chg->usb_icl_votable, LEGACY_UNKNOWN_VOTER, true, TYPEC_MEDIUM_CURRENT_UA);
-	} else if (typec_mode == POWER_SUPPLY_TYPEC_SOURCE_HIGH) {
-		vote(chg->usb_icl_votable, LEGACY_UNKNOWN_VOTER, true, TYPEC_HIGH_CURRENT_UA);
-	} else {
-		vote(chg->usb_icl_votable, LEGACY_UNKNOWN_VOTER, true, TYPEC_MEDIUM_CURRENT_UA);
-	}
-	/* end NB1-6004 */
 
 	power_supply_changed(chg->usb_psy);
 }
@@ -5121,7 +5106,7 @@ unlock:
 	mutex_unlock(&chg->lock);
 }
 
-/* -3293 - Show battery info */
+/* 3293 - Show battery info */
 #define showInfoDelayms 10000
 static void fih_update_batt_info_work(struct work_struct *work)
 {
@@ -5519,7 +5504,7 @@ int smblib_init(struct smb_charger *chg)
 	INIT_WORK(&chg->legacy_detection_work, smblib_legacy_detection_work);
 	INIT_DELAYED_WORK(&chg->uusb_otg_work, smblib_uusb_otg_work);
 	INIT_DELAYED_WORK(&chg->bb_removal_work, smblib_bb_removal_work);
-	/* -3293 - Show battery info */
+	/* 3293 - Show battery info */
 	INIT_DELAYED_WORK(&chg->update_batt_info_work, fih_update_batt_info_work);
 	/* end NB1-3293 */
 	chg->fake_capacity = -EINVAL;
@@ -5536,7 +5521,7 @@ int smblib_init(struct smb_charger *chg)
 
 		rc = qcom_step_chg_init(chg->step_chg_enabled,
 						chg->sw_jeita_enabled,
-						/* WayneWCShiue - A1NO-799 - Implement the WLC FCC adjust mechansim */
+						/* 799 - Implement the WLC FCC adjust mechansim */
 						chg->fih_wlc_fcc_en);
 						/* end A1NO-799 */
 		if (rc < 0) {

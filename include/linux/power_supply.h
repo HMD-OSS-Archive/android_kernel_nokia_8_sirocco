@@ -203,7 +203,7 @@ enum power_supply_property {
 	POWER_SUPPLY_PROP_HOT_TEMP,
 	POWER_SUPPLY_PROP_SYSTEM_TEMP_LEVEL,
 	POWER_SUPPLY_PROP_RESISTANCE,
-	/* NB1-7860 - Add more log for debug */
+	/* 7860 - Add more log for debug */
 	POWER_SUPPLY_PROP_RESISTANCE_ESR,
 	POWER_SUPPLY_PROP_RESISTANCE_RSLOW,
 	/* end NB1-7860 */
@@ -244,25 +244,25 @@ enum power_supply_property {
 	POWER_SUPPLY_PROP_PARALLEL_DISABLE,
 	POWER_SUPPLY_PROP_PE_START,
 	POWER_SUPPLY_PROP_SET_SHIP_MODE,
-	/* Change JEITA dynamically */
+	/* 3730 - Change JEITA dynamically */
 	POWER_SUPPLY_PROP_JEITA_DIFF_FN_EN,
 	POWER_SUPPLY_PROP_JEITA_FCC_COOL,
 	POWER_SUPPLY_PROP_JEITA_FCC_WARM,
 	POWER_SUPPLY_PROP_JEITA_FV_COOL,
 	POWER_SUPPLY_PROP_JEITA_FV_WARM,
 	/* end NB1-3730 */
-	/* [BAT] Inform Battery Protect AP once the battery can only charge to 4.1V */
+	/* 8555 - [BAT] Inform Battery Protect AP once the battery can only charge to 4.1V */
 	POWER_SUPPLY_PROP_JEITA_FULL_CAPACITY_STATUS,
 	POWER_SUPPLY_PROP_JEITA_FULL_CAPACITY_WARM_EN,
 	POWER_SUPPLY_PROP_JEITA_FULL_CAPACITY_COOL_EN,
 	/* end NB1-8555 */
-	/* Implement the WLC FCC adjust mechansim */
+	/* 799 - Implement the WLC FCC adjust mechansim */
 	POWER_SUPPLY_PROP_FIH_WLC_FCC_EN,
 	/* end A1NO-799 */
-	/* Add periodical checker mechanism for charging */
+	/* 1713 - Add periodical checker mechanism for charging */
 	POWER_SUPPLY_PROP_FIH_PERIOD_CHECKER,
 	/* end A1N-1713 */
-	/* Add battery event for problem report */
+	/* 6414 - Add battery event for problem report */
 	POWER_SUPPLY_PROP_MONITOR_EVENT,
 	/* end NB1-6414 */
 	POWER_SUPPLY_PROP_SOC_REPORTING_READY,

@@ -1335,11 +1335,11 @@ static int mtp_ctrlrequest(struct usb_composite_dev *cdev,
 	u16	w_length = le16_to_cpu(ctrl->wLength);
 	unsigned long	flags;
 
-	/*  - NB1-4944 - rndis can't auto install driver */
+	/* 4944 - rndis can't auto install driver */
 	//QC patch
 	//if(!dev->function.os_desc_n)
 	//	return value;
-	/* end FIH - NB1-4944 */
+	/* 4944 */
 
 	VDBG(cdev, "mtp_ctrlrequest "
 			"%02x.%02x v%04x i%04x l%u\n",
@@ -1938,7 +1938,7 @@ struct usb_function *function_alloc_mtp_ptp(struct usb_function_instance *fi,
 	dev->function.disable = mtp_function_disable;
 	dev->function.setup = mtp_ctrlreq_configfs;
 	dev->function.free_func = mtp_free;
-	/*  - NB1-33 - Fix MTP can't work */
+	/* 33 - Fix MTP can't work */
 	// QC patch
 	//dev->is_ptp = mtp_config;
 	dev->is_ptp = !mtp_config;

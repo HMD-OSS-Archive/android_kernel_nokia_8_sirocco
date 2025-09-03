@@ -37,8 +37,8 @@
 
 
 #ifdef CONFIG_TOUCHSCREEN_SIW
-#include "../../../include/linux/input/siw_touch_notify.h"
-#include "../../../fih/fih_touch.h"
+#include "../../../include/linux/input/siw_touch_notify.h" //SW8-DH-Touch-Notify-00+
+#include "../../../fih/fih_touch.h"//SW8-DH-TP_vendor-00+
 extern struct fih_touch_cb touch_cb;
 #endif
 #if defined(CONFIG_FIH_NB1) || defined(CONFIG_FIH_A1N)

@@ -80,7 +80,7 @@
 #define SLOPE_LIMIT_COEFF_MAX		31
 
 #define BATT_THERM_NUM_COEFFS		3
-/* WayneWCShiue - NB1-105 - [BBS] Porting BBS log for battery and charging */
+/* 105 - [BBS] Porting BBS log for battery and charging */
 #define BBS_LOG 1
 #ifdef BBS_LOG
 #define QPNPCHG_BATTERY_MISSING_ERROR do {printk("BBox;%s: Battery missing\n", __func__); printk("BBox::UEC;11::2\n");} while (0)
@@ -298,14 +298,14 @@ struct fg_batt_props {
 	int		float_volt_uv;
 	int		vbatt_full_mv;
 	int		fastchg_curr_ma;
-	/* WayneWCShiue - NB1-3730 - Change JEITA dynamically */
+	/* 3730 - Change JEITA dynamically */
 	bool	diff_jeita_fn_en;
 	int		jeita_fcc_comp_cool;
 	int		jeita_fcc_comp_warm;
 	int		jeita_fv_comp_cool;
 	int		jeita_fv_comp_warm;
 	/* end NB1-3730 */
-	/* WayneWCShiue - NB1-8555 - [BAT] Inform Battery Protect AP once the battery can only charge to 4.1V */
+	/* 8555 - [BAT] Inform Battery Protect AP once the battery can only charge to 4.1V */
 	bool		 fih_jeita_full_capacity_warm_en;
 	bool		 fih_jeita_full_capacity_cool_en;
 	/* end NB1-8555 */

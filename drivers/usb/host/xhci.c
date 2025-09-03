@@ -35,10 +35,10 @@
 #define DRIVER_AUTHOR "Sarah Sharp"
 #define DRIVER_DESC "'eXtensible' Host Controller (xHC) Driver"
 
-/*  - NB1-1572 - Improve otg speed */
+/* 1572 - Improve otg speed */
 // QC patch
 #define XHCI_INT_MODERATION_VAL 160
-/* end FIH - NB1-1572 */
+/* 1572 */
 
 #define	PORT_WAKE_BITS	(PORT_WKOC_E | PORT_WKDISC_E | PORT_WKCONN_E)
 

@@ -3167,7 +3167,7 @@
 				drive-strength = <2>;   /* 2 MA */
 			};
 		};
-/****** FIH HWID GPIO default ******/
+
 		/* gpio 16 */ /* HW_ID5 */
 		msm8998_gpio16_default: msm8998_gpio16_default {
 			mux {

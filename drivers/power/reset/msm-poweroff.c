@@ -106,14 +106,14 @@ struct reset_attribute {
 			__ATTR(_name, _mode, _show, _store)
 
 #ifdef CONFIG_FIH_DLOAD
-static int __init oem_dload_set(char *str);//* FIH, ramdump set by fastboot 
+static int __init oem_dload_set(char *str);
 #endif
 
 module_param_call(download_mode, dload_set, param_get_int,
 			&download_mode, 0644);
 
 #ifdef CONFIG_FIH_DLOAD
-__setup("download_mode=", oem_dload_set);//* FIH, ramdump set by fastboot oem command			
+__setup("download_mode=", oem_dload_set);
 #endif
 
 static int panic_prep_restart(struct notifier_block *this,

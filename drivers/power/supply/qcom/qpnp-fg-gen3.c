@@ -144,7 +144,7 @@
 #define FLOAT_VOLT_v2_WORD		16
 #define FLOAT_VOLT_v2_OFFSET		2
 
-/* -468 - [BAT] Jeita temperature protection */
+/* 468 - [BAT] Jeita temperature protection */
 #define DEFAULT_CUTOFF_VOLT_MV		3200
 #define DEFAULT_EMPTY_VOLT_MV		2850
 #define DEFAULT_RECHARGE_VOLT_MV	4250
@@ -636,7 +636,7 @@ static int fg_get_battery_temp(struct fg_chip *chip, int *val)
 	return 0;
 }
 
-/* -7860 - Add more log for debug */
+/* 7860 - Add more log for debug */
 static int fg_get_battery_resistance_esr(struct fg_chip *chip, int *val)
 {
 	int rc, esr_uohms;
@@ -1014,7 +1014,7 @@ static int fg_get_batt_profile(struct fg_chip *chip)
 	profile_node = of_batterydata_get_best_profile(batt_node,
 				chip->batt_id_ohms / 1000, NULL);
 
-	/* use default batt_id to try again */
+	/* 1665 - use default batt_id to try again */
 	#if defined(CONFIG_FIH_NB1) || defined(CONFIG_FIH_A1N)
 	if(!profile_node) {
 		pr_err("Error: cannot read battery profile, use default profile\n");
@@ -1033,7 +1033,7 @@ static int fg_get_batt_profile(struct fg_chip *chip)
 		return -ENODATA;
 	}
 
-	/* Avoid Runin fail: Use the battery id in the profile to instead of the one in the SRAM */
+	/* 3159 - Avoid Runin fail: Use the battery id in the profile to instead of the one in the SRAM */
 	#if defined(CONFIG_FIH_NB1) || defined(CONFIG_FIH_A1N)
 	rc = of_property_read_u32(profile_node, "qcom,batt-id-kohm",
 			&chip->batt_id_ohms);
@@ -1084,7 +1084,7 @@ static int fg_get_batt_profile(struct fg_chip *chip)
 		return -EINVAL;
 	}
 
-	/* [BAT] Jeita temperature protection */
+	/* 468 - [BAT] Jeita temperature protection */
 	chip->dt.jeita_thresholds[JEITA_COLD] = DEFAULT_BATT_TEMP_COLD;
 	chip->dt.jeita_thresholds[JEITA_COOL] = DEFAULT_BATT_TEMP_COOL;
 	chip->dt.jeita_thresholds[JEITA_WARM] = DEFAULT_BATT_TEMP_WARM;
@@ -1104,7 +1104,7 @@ static int fg_get_batt_profile(struct fg_chip *chip)
 		return 0;
 	}
 
-	/* Change JEITA dynamically */
+	/* 3730 - Change JEITA dynamically */
 	chip->bp.diff_jeita_fn_en = of_property_read_bool(profile_node,
 						"fih,diff-jeita-fn");
 
@@ -1140,7 +1140,7 @@ static int fg_get_batt_profile(struct fg_chip *chip)
 	/* end NB1-3730 */
 	/* end NB1-468 */
 
-	/* [BAT] Inform Battery Protect AP once the battery can only charge to 4.1V */
+	/* 8555 - [BAT] Inform Battery Protect AP once the battery can only charge to 4.1V */
 	chip->bp.fih_jeita_full_capacity_warm_en = of_property_read_bool(profile_node,
 						"fih,jeita-full-capacity-warm-en");
 
@@ -1270,7 +1270,7 @@ static void fg_notify_charger(struct fg_chip *chip)
 		return;
 	}
 
-	/* Change JEITA dynamically */
+	/* 3730 - Change JEITA dynamically */
 	prop.intval = (chip->bp.diff_jeita_fn_en == true) ? 1 : 0;
 	rc = power_supply_set_property(chip->batt_psy,
 			POWER_SUPPLY_PROP_JEITA_DIFF_FN_EN, &prop);
@@ -1309,7 +1309,7 @@ static void fg_notify_charger(struct fg_chip *chip)
 	}
 	/* end NB1-3730 */
 
-	/* [BAT] Inform Battery Protect AP once the battery can only charge to 4.1V */
+	/* 8555 - [BAT] Inform Battery Protect AP once the battery can only charge to 4.1V */
 	if(chip->bp.fih_jeita_full_capacity_warm_en == true)
 		prop.intval = 1;
 	else
@@ -1331,7 +1331,7 @@ static void fg_notify_charger(struct fg_chip *chip)
 	}
 	/* end NB1-8555 */
 
-	/* [BAT] If the property < 0, means there is no such property in dtsi, ignore it. */
+	/* 694 - [BAT] If the property < 0, means there is no such property in dtsi, ignore it. */
 	if(chip->bp.fastchg_curr_ma >= 0) {
 		prop.intval = chip->bp.fastchg_curr_ma * 1000;
 		rc = power_supply_set_property(chip->batt_psy,
@@ -2944,7 +2944,7 @@ static void profile_load_work(struct work_struct *work)
 		goto out;
 	}
 
-	/* We move jeita threshold to battery profile, so we need to write it after reading battery profile */
+	/* 7860 - We move jeita threshold to battery profile, so we need to write it after reading battery profile */
 	get_temp_setpoint(chip->dt.jeita_thresholds[JEITA_COLD], &val);
 	rc = fg_write(chip, BATT_INFO_JEITA_TOO_COLD(chip), &val, 1);
 	if (rc < 0) {
@@ -3694,7 +3694,7 @@ static int fg_psy_get_property(struct power_supply *psy,
 	case POWER_SUPPLY_PROP_RESISTANCE:
 		rc = fg_get_battery_resistance(chip, &pval->intval);
 		break;
-	/* Add more log for debug */
+	/* 7860 - Add more log for debug */
 	case POWER_SUPPLY_PROP_RESISTANCE_ESR:
 		rc = fg_get_battery_resistance_esr(chip, &pval->intval);
 		break;
@@ -3892,7 +3892,7 @@ static enum power_supply_property fg_psy_props[] = {
 	POWER_SUPPLY_PROP_CURRENT_NOW,
 	POWER_SUPPLY_PROP_RESISTANCE_ID,
 	POWER_SUPPLY_PROP_RESISTANCE,
-	/* Add more log for debug */
+	/* 7860 - Add more log for debug */
 	POWER_SUPPLY_PROP_RESISTANCE_ESR,
 	POWER_SUPPLY_PROP_RESISTANCE_RSLOW,
 	/* end NB1-7860 */
@@ -4069,7 +4069,7 @@ static int fg_hw_init(struct fg_chip *chip)
 		}
 	}
 
-	/* We move jeita threshold to battery profile, so we need to write it after reading battery profile */
+	/* 7860 - We move jeita threshold to battery profile, so we need to write it after reading battery profile */
 	#if 0
 	get_temp_setpoint(chip->dt.jeita_thresholds[JEITA_COLD], &val);
 	rc = fg_write(chip, BATT_INFO_JEITA_TOO_COLD(chip), &val, 1);
@@ -4366,7 +4366,7 @@ static irqreturn_t fg_delta_batt_temp_irq_handler(int irq, void *data)
 		pr_warn("Battery temperature last:%d current: %d\n",
 			chip->last_batt_temp, batt_temp);
 
-	/* Add periodical checker mechanism for charging */
+	/* 1713 - Add periodical checker mechanism for charging */
 	rc = power_supply_set_property(chip->batt_psy,
 			POWER_SUPPLY_PROP_FIH_PERIOD_CHECKER, &prop);
 	/* end A1N-1713 */
@@ -4411,7 +4411,7 @@ static irqreturn_t fg_delta_msoc_irq_handler(int irq, void *data)
 {
 	struct fg_chip *chip = data;
 	int rc;
-	/* Add periodical checker mechanism for charging */
+	/* 1713 - Add periodical checker mechanism for charging */
 	union power_supply_propval prop = {0, };
 	/* end A1N-1713 */
 
@@ -4441,7 +4441,7 @@ static irqreturn_t fg_delta_msoc_irq_handler(int irq, void *data)
 	if (rc < 0)
 		pr_err("Error in adjusting timebase, rc=%d\n", rc);
 
-	/* Add periodical checker mechanism for charging */
+	/* 1713 - Add periodical checker mechanism for charging */
 	rc = power_supply_set_property(chip->batt_psy,
 			POWER_SUPPLY_PROP_FIH_PERIOD_CHECKER, &prop);
 	/* end A1N-1713 */
@@ -4873,7 +4873,7 @@ static int fg_parse_dt(struct fg_chip *chip)
 	else
 		chip->dt.rsense_sel = (u8)temp & SOURCE_SELECT_MASK;
 
-	/* [BAT] Jeita temperature protection.
+	/* 468 - [BAT] Jeita temperature protection.
 	  * Move the setting of temperature to batteryData
 	  */
 	#if 0

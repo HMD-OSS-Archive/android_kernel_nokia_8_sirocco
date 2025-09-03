@@ -255,7 +255,7 @@ struct dwc3_msm {
 static void dwc3_pwr_event_handler(struct dwc3_msm *mdwc);
 static int dwc3_msm_gadget_vbus_draw(struct dwc3_msm *mdwc, unsigned mA);
 
-/* Set gpio 21,42 to output high for usb redriver */
+/* 53 - Set gpio 21,42 to output high for usb redriver */
 #ifdef CONFIG_FIH_NB1
 static int mRedriver_vdd_gpio = 0;
 static int mRedriver_en_gpio = 0;
@@ -301,9 +301,9 @@ int fihSetUsbRedriverGpio(struct device *dev, int highLow){
 	return 0;
 }
 #endif
-/* end FIH - NB1-53 */
+/* 53 */
 
-/* Dump typec sts register value */
+/* 680 - Dump typec sts register value */
 #if defined(CONFIG_FIH_NB1) || defined(CONFIG_FIH_A1N)
 int dumpTypeCSts(struct dwc3 *dwc)
 {
@@ -320,7 +320,7 @@ int dumpTypeCSts(struct dwc3 *dwc)
 	return 0;
 }
 #endif
-/* end FIH - NB1-680 */
+/* 680 */
 
 /**
  *
@@ -2228,11 +2228,11 @@ static int dwc3_msm_suspend(struct dwc3_msm *mdwc)
 		mdwc->lpm_flags |= MDWC3_ASYNC_IRQ_WAKE_CAPABILITY;
 	}
 
-/* Set gpio 21,42 to output high for usb redriver */
+/* 53 - Set gpio 21,42 to output high for usb redriver */
 #ifdef CONFIG_FIH_NB1
 	fihSetUsbRedriverGpio(mdwc->dev, 0);
 #endif
-/* end FIH - NB1-720 */
+/* 720 */
 
 	dev_info(mdwc->dev, "DWC3 in low power mode\n");
 	mutex_unlock(&mdwc->suspend_resume_mutex);
@@ -2249,11 +2249,11 @@ static int dwc3_msm_resume(struct dwc3_msm *mdwc)
 
 	mutex_lock(&mdwc->suspend_resume_mutex);
 
-/* Set gpio 21,42 to output high for usb redriver */
+/* 53 - Set gpio 21,42 to output high for usb redriver */
 #ifdef CONFIG_FIH_NB1
 	fihSetUsbRedriverGpio(mdwc->dev, 1);
 #endif
-/* end FIH - NB1-720 */
+/* 720 */
 
 	if (!atomic_read(&dwc->in_lpm)) {
 		dev_dbg(mdwc->dev, "%s: Already resumed\n", __func__);
@@ -2310,12 +2310,12 @@ static int dwc3_msm_resume(struct dwc3_msm *mdwc)
 	clk_set_rate(mdwc->core_clk, core_clk_rate);
 	clk_prepare_enable(mdwc->core_clk);
 
-	/* Otg cable can't attach earlier than usb disk */
+	/* 634 - Otg cable can't attach earlier than usb disk */
 	// QC patch
 	/* set Memory core: ON, Memory periphery: ON */
 	clk_set_flags(mdwc->core_clk, CLKFLAG_RETAIN_MEM);
 	clk_set_flags(mdwc->core_clk, CLKFLAG_RETAIN_PERIPH);
-	/* end FIH - NB1-634 */
+	/* 634 */
 
 	clk_prepare_enable(mdwc->utmi_clk);
 	if (mdwc->bus_aggr_clk)
@@ -3159,15 +3159,15 @@ static int dwc3_msm_probe(struct platform_device *pdev)
 		}
 	}
 
-/* FIH - akckwang - NB1-868 - Set gpio 21,42 to output low in probe */
-/* FIH - akckwang - NB1-53 - Set gpio 21,42 to output high for usb redriver */
+/* 868 - Set gpio 21,42 to output low in probe */
+/* 53 - Set gpio 21,42 to output high for usb redriver */
 #ifdef CONFIG_FIH_NB1
 	if(fihGetUsbRedriverGpio(pdev) == 0){
 		fihSetUsbRedriverGpio(&pdev->dev, 0);
 	}
 #endif
-/* end FIH - NB1-53 */
-/* end FIH - NB1-868 */
+/* 53 */
+/* 868 */
 
 	ext_hub_reset_gpio = of_get_named_gpio(node,
 					"qcom,ext-hub-reset-gpio", 0);

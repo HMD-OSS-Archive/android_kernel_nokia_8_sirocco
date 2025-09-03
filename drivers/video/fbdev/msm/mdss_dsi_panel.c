@@ -28,8 +28,8 @@
 #include "mdss_debug.h"
 
 #ifdef CONFIG_TOUCHSCREEN_SIW
-#include "../../../include/linux/input/siw_touch_notify.h"
-#include "../../../fih/fih_touch.h"
+#include "../../../include/linux/input/siw_touch_notify.h" //SW8-Touch_Notify-00+
+#include "../../../fih/fih_touch.h"//SW8-DH-TP_vendor-00+
 extern struct fih_touch_cb touch_cb;
 #endif
 
@@ -1200,7 +1200,7 @@ static int mdss_dsi_panel_off(struct mdss_panel_data *pdata)
 			synaptics_rmi4_disable_irq();
 		}
 	}
-	//Disable_touch_irq_before_Display_off+]
+	//SW5-DH-Disable_touch_irq_before_Display_off+]
 	#endif
 #endif
 

@@ -4364,9 +4364,7 @@ CONFIG_MSM_TZ_LOG=y
 # CONFIG_BIF is not set
 CONFIG_SENSORS_SSC=y
 
-#
-# Device Drivers for FIH
-#
+
 # CONFIG_FIH_NB1 is not set
 CONFIG_FIH_A1N=y
 CONFIG_FIH_APR=y

@@ -2918,7 +2918,7 @@ int fsg_common_create_lun(struct fsg_common *common, struct fsg_lun_config *cfg,
 
 	lun->name_pfx = name_pfx;
 
-/* FIH - akckwang - NB1-777 - [00WW][Driver]No DVD/CD-ROM. */
+/* 777 - [00WW][Driver]No DVD/CD-ROM. */
 #if defined(CONFIG_FIH_NB1)
 	lun->cdrom = 1;
 	lun->ro = 1;
@@ -2930,7 +2930,7 @@ int fsg_common_create_lun(struct fsg_common *common, struct fsg_lun_config *cfg,
 	lun->initially_ro = lun->ro;
 	lun->removable = !!cfg->removable;
 #endif
-/* end FIH - NB1-777 */
+/* 777 */
 
 	if (!common->sysfs) {
 		/* we DON'T own the name!*/

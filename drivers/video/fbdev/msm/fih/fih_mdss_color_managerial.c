@@ -179,7 +179,7 @@ int fih_mdss_high_brightness_configure(bool enable)
 {
 	struct msm_fb_data_type *mfd;
 	struct mdss_panel_data *pdata;
-	u32 bl_level=0;
+	// u32 bl_level=0;
 	mfd = fih_mdss_primary_fb_get_ctrl();
 	if(mfd==NULL)
 	{

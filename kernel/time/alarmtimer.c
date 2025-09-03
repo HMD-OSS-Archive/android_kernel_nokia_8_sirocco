@@ -23,12 +23,12 @@
 #include <linux/mutex.h>
 #include <linux/platform_device.h>
 #include <linux/posix-timers.h>
+#include <linux/workqueue.h>
 #include <linux/freezer.h>
 
 #ifdef CONFIG_MSM_PM
 #include "lpm-levels.h"
 #endif
-#include <linux/workqueue.h>
 
 /**
  * struct alarm_base - Alarm timer bases
@@ -372,6 +372,7 @@ static int alarmtimer_resume(struct device *dev)
 	if (!rtc)
 		return 0;
 	rtc_timer_cancel(rtc, &rtctimer);
+
 	return 0;
 }
 
@@ -882,7 +883,8 @@ static int alarm_timer_nsleep(const clockid_t which_clock, int flags,
 	/* Convert (if necessary) to absolute time */
 	if (flags != TIMER_ABSTIME) {
 		ktime_t now = alarm_bases[type].gettime();
-		exp = ktime_add(now, exp);
+
+		exp = ktime_add_safe(now, exp);
 	}
 
 	if (alarmtimer_do_nsleep(&alarm, exp))

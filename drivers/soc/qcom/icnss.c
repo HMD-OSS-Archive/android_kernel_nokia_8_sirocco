@@ -1283,7 +1283,8 @@ static int wlfw_msa_mem_info_send_sync_msg(void)
 	}
 
 	return 0;
-
+fail_unwind:
+	memset(&penv->mem_region[0], 0, sizeof(penv->mem_region[0]) * i);
 out:
 	penv->stats.msa_info_err++;
 	printk("BBox::UEC;13::9\n"); //BBox Get memory fail
